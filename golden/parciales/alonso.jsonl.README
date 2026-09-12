@@ -1,0 +1,2 @@
+# Preguntas de alonso. Una por linea, esquema del CONTRATO C4.
+# Valida con: python -m agente_10k.cli validar-golden golden/parciales/alonso.jsonl
