@@ -1,0 +1,10 @@
+{"ticker": "NVDA", "fiscal_year": 2024, "concept": "Revenues", "value": 60922000000.0, "unit": "USD", "period_end": "2024-01-28", "form": "10-K"}
+{"ticker": "NVDA", "fiscal_year": 2024, "concept": "NetIncomeLoss", "value": 29760000000.0, "unit": "USD", "period_end": "2024-01-28", "form": "10-K"}
+{"ticker": "NVDA", "fiscal_year": 2024, "concept": "GrossProfit", "value": 44301000000.0, "unit": "USD", "period_end": "2024-01-28", "form": "10-K"}
+{"ticker": "NVDA", "fiscal_year": 2025, "concept": "Revenues", "value": 130497000000.0, "unit": "USD", "period_end": "2025-01-26", "form": "10-K"}
+{"ticker": "MSFT", "fiscal_year": 2024, "concept": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": 245122000000.0, "unit": "USD", "period_end": "2024-06-30", "form": "10-K"}
+{"ticker": "MSFT", "fiscal_year": 2025, "concept": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": 281724000000.0, "unit": "USD", "period_end": "2025-06-30", "form": "10-K"}
+{"ticker": "MSFT", "fiscal_year": 2025, "concept": "GrossProfit", "value": 196000000000.0, "unit": "USD", "period_end": "2025-06-30", "form": "10-K"}
+{"ticker": "AMZN", "fiscal_year": 2025, "concept": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": 700000000000.0, "unit": "USD", "period_end": "2025-12-31", "form": "10-K"}
+{"ticker": "AMZN", "fiscal_year": 2025, "concept": "NetIncomeLoss", "value": 65000000000.0, "unit": "USD", "period_end": "2025-12-31", "form": "10-K"}
+{"ticker": "AMZN", "fiscal_year": 2025, "concept": "Assets", "value": 650000000000.0, "unit": "USD", "period_end": "2025-12-31", "form": "10-K"}
