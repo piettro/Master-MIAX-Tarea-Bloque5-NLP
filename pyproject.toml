@@ -1,0 +1,169 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agente-10k"
+version = "0.1.0"
+description = "Agente investigador sobre informes 10-K de la SEC, con citas verificables"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Piettro" },
+    { name = "Alonso" },
+    { name = "Raul" },
+]
+
+# Versiones FIJADAS, no rangos. El notebook de la sesion 1 las verifico contra
+# la documentacion oficial el 2 de septiembre de 2026; LangChain publica cada
+# pocos dias y una API que se mueve debajo del codigo lo rompe sin tocar una
+# linea. Ver docs/decisiones.md, ADR-002.
+dependencies = [
+    "langchain==1.3.18",
+    "langchain-core==1.6.1",
+    "langgraph==1.2.11",
+    "langchain-openrouter==0.2.8",
+    "langchain-huggingface==1.2.2",
+    "sentence-transformers==6.0.1",
+    "faiss-cpu==1.15.0",
+    "rank-bm25==0.2.2",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "numpy>=1.26",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.5",
+    "python-dotenv>=1.0",
+    "structlog>=24.4",
+    "diskcache>=5.6",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "mypy>=1.11",
+    "ruff>=0.6",
+    "pre-commit>=3.8",
+    "detect-secrets>=1.5",
+    "pandas-stubs>=2.2",
+]
+# Proveedores alternativos del CONTRATO C5/P5. No se instalan por defecto:
+# el evaluador externo solo necesita el proveedor que este en LLM_PROVIDER.
+anthropic = ["langchain-anthropic>=1.0"]
+google = ["langchain-google-genai>=2.0"]
+openai = ["langchain-openai>=1.0"]
+
+[project.scripts]
+agente-10k = "agente_10k.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agente_10k"]
+
+# ---------------------------------------------------------------------------
+# ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "C4",       # comprehensions
+    "SIM",      # simplify
+    "PL",       # pylint
+    "RUF",
+    "D",        # pydocstyle: los docstrings son parte del sistema (CONTRATO C2)
+    "ANN",      # anotaciones de tipo completas
+    "T20",      # nada de print fuera del CLI
+    "TRY",      # no tragarse excepciones
+]
+ignore = [
+    "D203",     # incompatible con D211
+    "D213",     # incompatible con D212
+    "TRY003",   # mensajes de excepcion largos: aqui son deliberados
+    "PLR0913",  # las tools tienen los parametros que fija el CONTRATO C1
+    # Los imports perezosos son una DECISION de diseno, no un descuido:
+    # `import agente_10k` tiene que ser instantaneo y no debe fallar porque
+    # falte LangChain, faiss o torch (CONTRATO C5, y ADR-005). Van dentro de
+    # las funciones a proposito y hay un test que lo comprueba.
+    "PLC0415",
+    # El codigo esta escrito en castellano, con comillas tipograficas y
+    # acentos. Marcar cada « y cada í como "caracter ambiguo" es ruido.
+    "RUF001", "RUF002", "RUF003", "PLC2401",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# El baseline del profesor se preserva TAL CUAL (CONTRATO: HITO 1).
+"src/agente_10k/baseline/*" = ["ALL"]
+"src/agente_10k/cli.py" = ["T20"]
+"scripts/*" = ["T20"]
+"golden/validador.py" = ["T20"]
+# En los tests, el nombre del metodo ES la frase que documenta el caso:
+# `test_dice_que_se_use_SIEMPRE_...` se lee en la salida de pytest.
+"tests/*" = ["D", "ANN", "PLR2004", "T20", "N802", "N806"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["agente_10k"]
+
+# ---------------------------------------------------------------------------
+# mypy
+# ---------------------------------------------------------------------------
+[tool.mypy]
+# 3.12 y no 3.11 por una limitacion de las anotaciones de numpy, que usan la
+# sintaxis `type X = ...` y no se pueden analizar declarando un objetivo
+# anterior. El CODIGO sigue siendo valido en 3.11 (`requires-python`), y ruff
+# lo comprueba con `target-version = "py311"`. Ver docs/decisiones.md, ADR-003.
+python_version = "3.12"
+strict = true
+files = ["src/agente_10k"]
+exclude = "^src/agente_10k/baseline/"
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "faiss.*",
+    "rank_bm25.*",
+    "sentence_transformers.*",
+    "diskcache.*",
+    "langchain.*",
+    "langchain_core.*",
+    "langgraph.*",
+]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+markers = [
+    "corpus: necesita el corpus real en data/corpus (se omite si no esta)",
+    "red: necesita red o clave de API (nunca se ejecuta en CI)",
+]
+
+[tool.coverage.run]
+source = ["src/agente_10k"]
+omit = ["src/agente_10k/baseline/*", "src/agente_10k/cli.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    '\.\.\.',
+]

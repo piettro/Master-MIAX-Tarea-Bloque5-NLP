@@ -1,0 +1,47 @@
+# Instalar con `make setup` (que hace `pre-commit install`).
+# El gancho que de verdad importa aquí es detect-secrets: CONTRATO C6, ninguna
+# clave de API en el repositorio ni en su historial.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: ^(class_transcription/|notebooks/|docs/enunciado\.md)
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy --strict src/
+        entry: mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: ["--strict", "src/agente_10k"]
+
+      - id: baseline-congelado
+        name: resultados/baseline/ es de solo lectura tras el HITO 1
+        entry: python scripts/comprobar_baseline.py
+        language: system
+        pass_filenames: false
