@@ -85,7 +85,15 @@ class Settings(BaseSettings):
 
     # --- retrieval (F3) ----------------------------------------------------
     recuperador: TipoRecuperador = "denso"
-    filtro_metadatos: bool = True
+    filtro_metadatos: bool = Field(
+        default=False,
+        description=(
+            "Aplicar los filtros ANTES de buscar. Por defecto FALSE, que es lo "
+            "que hace la implementación del profesor: filtra después, sobre el "
+            "orden que devuelve el índice. Es el baseline honesto, y activarlo "
+            "es la primera fila de la tabla de ablación (ADR-009)"
+        ),
+    )
     reescritura_consulta: bool = False
     rrf_k: int = Field(default=60, ge=1)
     k_por_defecto: int = Field(default=5, ge=1)

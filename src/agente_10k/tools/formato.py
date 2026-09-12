@@ -47,6 +47,22 @@ def fragmentos(encontrados: Sequence[Fragmento]) -> str:
     return "\n\n---\n\n".join(partes)
 
 
+def sin_recuperador(motivo: str | None = None) -> str:
+    """La búsqueda de texto no está montada, y por qué.
+
+    El modelo necesita saber que esto NO significa que el dato no exista: si lo
+    tomara por una ausencia, respondería «no está en el corpus» a preguntas que
+    sí tienen respuesta.
+    """
+    causa = f" Motivo: {motivo}." if motivo else ""
+    return (
+        "La búsqueda de texto no está disponible en esta instalación."
+        f"{causa} Esto NO significa que el dato no exista: significa que esta "
+        "herramienta no puede buscarlo. Usa get_xbrl_fact para cifras o "
+        "read_section si sabes qué sección leer."
+    )
+
+
 def hecho_xbrl(hecho: HechoXbrl) -> str:
     """Un hecho encontrado, con todo lo que el agente necesita para el esquema.
 

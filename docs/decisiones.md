@@ -202,8 +202,16 @@ material del profesor, y dejar en stub las cuatro mejoras.
 **Consecuencia.** El denso es el baseline honesto contra el que se mide la
 ablación —incluido que **filtra después de buscar**, igual que la
 implementación del profesor, para que «filtrar antes» sea una mejora medible y
-no algo que ya estuviera hecho—. Alonso llega a la fase 3 con la interfaz
-estable y una fila base ya ejecutable.
+no algo que ya estuviera hecho—. Por eso `AGENTE10K_FILTRO_METADATOS` viene a
+`false` por defecto: activarlo es la segunda fila de la tabla, no el punto de
+partida. Alonso llega a la fase 3 con la interfaz estable y una fila base ya
+ejecutable.
+
+**Corolario que costó un rato encontrar.** Con el filtro activado por defecto,
+`search_filings` caía en el stub de la fase 3 y devolvía «no disponible» sin
+decir por qué, porque el `try/except` de `herramientas_por_defecto` se tragaba
+la excepción. Ahora el motivo se conserva y viaja hasta el texto que lee el
+modelo. Degradar sí; degradar en silencio no: eso se descubre el día 24.
 
 ---
 
