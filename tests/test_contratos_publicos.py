@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -87,9 +88,13 @@ class TestContratoC5:
 class TestContratoC6:
     """Ninguna clave de API en el repositorio."""
 
-    PATRONES = (
-        re.compile(r"sk-[A-Za-z0-9]{16,}"),
-        re.compile(r"sk-or-v1-[A-Za-z0-9]{8,}"),
+    # Los prefijos se componen en tiempo de ejecucion para que la cadena
+    # literal no exista en el fichero: asi una auditoria a base de `grep -r`
+    # sobre el repositorio no se encuentra a si misma y devuelve limpio.
+    _SK = "s" + "k-"
+    PATRONES: ClassVar[tuple[re.Pattern[str], ...]] = (
+        re.compile(_SK + r"[A-Za-z0-9]{16,}"),
+        re.compile(_SK + r"or-v1-[A-Za-z0-9]{8,}"),
         re.compile(r"""(?i)api[_-]?key\s*=\s*["'][A-Za-z0-9\-_]{16,}["']"""),
     )
 
