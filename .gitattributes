@@ -1,0 +1,19 @@
+# Somos tres en Windows, macOS y Linux. Sin esto, el primer commit de cada uno
+# reescribe el fichero entero por los finales de linea y los diffs dejan de
+# decir nada.
+* text=auto eol=lf
+
+# Binarios: que git no los toque.
+*.parquet binary
+*.faiss   binary
+*.zip     binary
+*.docx    binary
+*.pdf     binary
+*.png     binary
+
+# Los notebooks son ruidosos en los diffs; el del profesor no se toca.
+*.ipynb -diff
+
+# El JSONL del golden set: una linea por pregunta, y la fusion la hace un
+# script (golden/validador.py::fusionar_parciales), no git.
+*.jsonl text eol=lf
