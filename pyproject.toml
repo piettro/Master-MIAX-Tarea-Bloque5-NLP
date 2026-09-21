@@ -107,9 +107,15 @@ ignore = [
 "src/agente_10k/cli.py" = ["T20"]
 "scripts/*" = ["T20"]
 "golden/validador.py" = ["T20"]
+"golden/asistente_preguntas.py" = ["T20"]
 # En los tests, el nombre del metodo ES la frase que documenta el caso:
 # `test_dice_que_se_use_SIEMPRE_...` se lee en la salida de pytest.
 "tests/*" = ["D", "ANN", "PLR2004", "T20", "N802", "N806"]
+
+[tool.ruff.format]
+# Mismo motivo que el per-file-ignore de arriba: el formateador reescribiria
+# `miax_s2.py` al hacer commit y dejaria de ser una copia literal.
+exclude = ["src/agente_10k/baseline/*"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

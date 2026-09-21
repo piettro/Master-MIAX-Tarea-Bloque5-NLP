@@ -12,10 +12,14 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
-from agente_10k.config import settings
+from agente_10k.config import RAIZ_REPO, settings
+
+if TYPE_CHECKING:
+    from agente_10k.dominio.modelos import ResultadoPregunta
 
 RUTA_GOLDEN_POR_DEFECTO = typer.Argument(Path("golden/golden_set.jsonl"))
 
@@ -24,6 +28,25 @@ app = typer.Typer(
     help="Agente investigador sobre informes 10-K de la SEC.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def _entorno() -> None:
+    """Carga `.env` antes de cualquier orden, para que la clave llegue al SDK."""
+    from agente_10k.evaluacion.sistemas import cargar_entorno
+
+    cargar_entorno()
+
+
+def _imprimir_progreso(n: int, total: int, r: ResultadoPregunta) -> None:
+    """Una línea por pregunta mientras se evalúa: el día 24 hay que ver avanzar."""
+    if r.error:
+        estado = f"ERROR {r.error[:90]}"
+    else:
+        estado = {True: "acierto", False: "fallo", None: "sin veredicto"}[r.acierto]
+    camino = " > ".join(r.traza.trayectoria) if r.traza else ""
+    segundos = f"{r.traza.latencia_s:.1f} s" if r.traza else ""
+    print(f"[{n}/{total}] {r.pregunta_id:<10} {estado:<14} {segundos:>7}  {camino}")
 
 
 @app.command()
@@ -71,13 +94,28 @@ def responder(pregunta: str) -> None:
 @app.command()
 def evaluar(
     ruta_jsonl: Path,
-    etiqueta: str = typer.Option("final", help="Subcarpeta de resultados/"),
+    etiqueta: str | None = typer.Option(
+        None, help="Subcarpeta de resultados/. Por defecto final, o ciegas."
+    ),
+    sistema: str = typer.Option("final", help="final | baseline"),
+    recall: bool = typer.Option(True, help="Medir el recall@k del retrieval"),
 ) -> None:
     """Ejecuta el sistema sobre un JSONL de preguntas y escribe los resultados."""
     from agente_10k.evaluacion.ejecutor import evaluar as _evaluar
+    from agente_10k.evaluacion.informe import tabla_comparada
+    from agente_10k.evaluacion.sistemas import SistemaBaseline
 
-    informe = _evaluar(ruta_jsonl, etiqueta=etiqueta)
-    print(informe)
+    elegido = SistemaBaseline() if sistema == "baseline" else None
+    informe = _evaluar(
+        ruta_jsonl,
+        etiqueta=etiqueta,
+        sistema=elegido,
+        medir_retrieval=recall,
+        progreso=_imprimir_progreso,
+    )
+    print(f"\n{informe}\n")
+    print(tabla_comparada([informe]))
+    print(f"escrito en {settings().dir_resultados / informe.etiqueta}")
 
 
 @app.command(name="validar-golden")
@@ -95,14 +133,45 @@ def validar_golden(ruta_jsonl: Path) -> None:
 def baseline(
     ruta_jsonl: Path = RUTA_GOLDEN_POR_DEFECTO,
 ) -> None:
-    """Ejecuta el baseline del profesor y lo CONGELA. HITO 1, irreversible."""
-    print(
-        "El baseline se ejecuta con la implementación del profesor, que está "
-        "en src/agente_10k/baseline/ sin modificar.\n"
-        "Pendiente de la fase 1: ver resultados/README.md para el protocolo "
-        "de congelación."
+    """Ejecuta el baseline del profesor y lo CONGELA. HITO 1, irreversible.
+
+    El sistema es `miax_s2.baseline()`, el agente del día 10 que reparte el
+    profesor, con el mismo modelo que el sistema final. El recall@k se mide con
+    el retrieval de partida: denso, sin filtro previo y sin reescritura.
+    """
+    from agente_10k.evaluacion.ejecutor import evaluar as _evaluar
+    from agente_10k.evaluacion.informe import tabla_comparada
+    from agente_10k.evaluacion.sistemas import SistemaBaseline
+
+    sys.path.insert(0, str(RAIZ_REPO / "scripts"))
+    import comprobar_baseline as guardian  # type: ignore[import-not-found]
+
+    if guardian.RUTA_SELLO.is_file():
+        print(
+            "resultados/baseline/ ya está CONGELADO. Si de verdad hay que "
+            "regenerarlo, borra SELLO.json a mano y deja constancia en "
+            "docs/decisiones.md de por qué."
+        )
+        raise typer.Exit(1)
+
+    cfg = settings().model_copy(
+        update={
+            "recuperador": "denso",
+            "filtro_metadatos": False,
+            "reescritura_consulta": False,
+        }
     )
-    raise typer.Exit(1)
+    informe = _evaluar(
+        ruta_jsonl,
+        etiqueta="baseline",
+        sistema=SistemaBaseline(cfg),
+        config=cfg,
+        progreso=_imprimir_progreso,
+    )
+    print(f"\n{informe}\n")
+    print(tabla_comparada([informe]))
+    sello = guardian.sellar()
+    print(f"CONGELADO: {len(sello['huellas'])} ficheros sellados en SELLO.json")
 
 
 @app.command()
@@ -118,7 +187,7 @@ def informe() -> None:
     from agente_10k.evaluacion.informe import generar_todo
 
     cfg = settings()
-    escritos = generar_todo(cfg.dir_resultados, Path("docs/informe"))
+    escritos = generar_todo(cfg.dir_resultados, RAIZ_REPO / "docs" / "informe")
     for ruta in escritos:
         print(f"escrito {ruta}")
 
@@ -128,12 +197,19 @@ def comparar(
     baseline_etiqueta: str = "baseline",
     final_etiqueta: str = "final",
 ) -> None:
-    """La tabla baseline contra final. FASE 5."""
-    print(
-        f"Pendiente de la fase 5 (Raúl): comparar '{baseline_etiqueta}' con "
-        f"'{final_etiqueta}'."
-    )
-    raise typer.Exit(1)
+    """La tabla baseline contra final, con el mejor valor remarcado. FASE 5."""
+    from agente_10k.evaluacion.informe import cargar_informe, tabla_comparada
+
+    dir_resultados = settings().dir_resultados
+    rutas = [
+        dir_resultados / etiqueta / "informe.json"
+        for etiqueta in (baseline_etiqueta, final_etiqueta)
+    ]
+    faltan = [str(r) for r in rutas if not r.is_file()]
+    if faltan:
+        print(f"Falta ejecutar antes: {', '.join(faltan)}")
+        raise typer.Exit(1)
+    print(tabla_comparada([cargar_informe(r) for r in rutas]))
 
 
 @app.command(name="reconstruir-secciones")

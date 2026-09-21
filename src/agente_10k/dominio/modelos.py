@@ -359,6 +359,24 @@ class ResultadoPregunta(BaseModel):
 
     pregunta_id: str
     familia: Familia | None = None
+    es_hueco: bool = Field(
+        default=False,
+        description="Si la respuesta correcta era que el dato no está (columna hueco)",
+    )
+    respuesta_correcta: bool | None = Field(
+        default=None,
+        description=(
+            "Si la respuesta es correcta sin mirar el camino. `None` cuando "
+            "ningún evaluador pudo aplicarse: pregunta ciega sin esquema"
+        ),
+    )
+    acierto: bool | None = Field(
+        default=None,
+        description=(
+            "Respuesta correcta Y por el camino correcto. Es lo que cuenta en la "
+            "tabla: acertar por el camino equivocado es fallo"
+        ),
+    )
     respuesta: RespuestaFinanciera | None = None
     traza: Traza | None = None
     cita: VeredictoEvaluador | None = None
