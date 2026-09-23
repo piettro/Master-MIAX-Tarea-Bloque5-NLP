@@ -139,9 +139,27 @@ dejar constancia en `docs/decisiones.md`.
 
 {{incluir: docs/informe/significancia.md}}
 
-### Por familia y por pregunta
+### El baseline, en detalle
 
 {{incluir: docs/informe/resultados_baseline.md}}
+
+Tres cosas que se leen ahí y que orientan el trabajo de mejora:
+
+- **Enruta bien y contesta mal.** La trayectoria es correcta en todas las
+  preguntas en las que aplica: el agente va a XBRL cuando la pregunta es
+  numérica y al texto cuando es un matiz. El problema no es la elección de
+  herramienta.
+- **Las comparativas son el agujero.** Ninguna sale. El patrón es siempre el
+  mismo: consulta un ejercicio, consulta el otro y falla al combinarlos o
+  arrastra la cifra de uno de los dos. Es lo que hay que atacar primero.
+- **Hay una alucinación sobre hueco.** Con el dato ausente del corpus, el
+  sistema dio una cifra igualmente. Es el fallo más caro de los que mide la
+  tabla y es exactamente lo que el guardarraíl tiene que parar.
+
+Una pregunta murió con un error del proveedor (`BadRequestResponseError`) y
+cuenta como fallo: la ejecución continúa y lo deja escrito en vez de
+interrumpirse, que es la regla del ejecutor. Está en la columna «qué falló» como
+error de ejecución.
 
 ## 6. Las diez preguntas ciegas
 

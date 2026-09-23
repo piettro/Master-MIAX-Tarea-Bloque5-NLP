@@ -354,8 +354,400 @@ huellas SHA-256 de cada fichero); regenerarlo exige borrar el sello a mano y
 dejar constancia en <code>docs/decisiones.md</code>.</p>
 <p class="aviso">PENDIENTE: falta docs\informe\tabla_principal.md. Se genera ejecutando el repositorio.</p>
 <p class="aviso">PENDIENTE: falta docs\informe\significancia.md. Se genera ejecutando el repositorio.</p>
-<h3>Por familia y por pregunta</h3>
-<p class="aviso">PENDIENTE: falta docs\informe\resultados_baseline.md. Se genera ejecutando el repositorio.</p>
+<h3>El baseline, en detalle</h3>
+<h1>Resultados · baseline</h1>
+<ul>
+<li>fecha: 2026-09-23 19:35 UTC</li>
+<li>modelo: openrouter:google/gemini-3.8-flash</li>
+<li>commit: 6800450</li>
+<li>preguntas: 20 (golden\golden_set.jsonl)</li>
+<li>acierto total: 11/20, IC 95 % [34%, 74%]</li>
+</ul>
+<h2>Resumen</h2>
+<table>
+<thead>
+<tr>
+<th>sistema</th>
+<th>extractiva</th>
+<th>numérica</th>
+<th>comparativa</th>
+<th>hueco</th>
+<th>total</th>
+<th>recall@5</th>
+<th>coste medio</th>
+<th>latencia media</th>
+<th>tool calls/pregunta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>baseline</td>
+<td>83%</td>
+<td>75%</td>
+<td>0%</td>
+<td>33%</td>
+<td>55%</td>
+<td>25%</td>
+<td>1.234 ¢</td>
+<td>17.7 s</td>
+<td>3.4</td>
+</tr>
+</tbody>
+</table>
+<h2>Por familia</h2>
+<table>
+<thead>
+<tr>
+<th>familia</th>
+<th>preguntas</th>
+<th>aciertos</th>
+<th>qué falló</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>numerica</td>
+<td>8</td>
+<td>6/8</td>
+<td>fuente_no_ninguna (2), cita_no_literal (1), alucinacion_sobre_hueco (1)</td>
+</tr>
+<tr>
+<td>hueco</td>
+<td>3</td>
+<td>1/3</td>
+<td>fuente_no_ninguna (2), cita_no_literal (1), alucinacion_sobre_hueco (1)</td>
+</tr>
+<tr>
+<td>comparativa</td>
+<td>6</td>
+<td>0/6</td>
+<td>cifra_no_coincide (5), cita_no_literal (1), no_respalda_ancla (1)</td>
+</tr>
+<tr>
+<td>extractiva</td>
+<td>6</td>
+<td>5/6</td>
+<td>error de ejecución (1)</td>
+</tr>
+</tbody>
+</table>
+<h2>Trayectoria</h2>
+<table>
+<thead>
+<tr>
+<th>trayectoria</th>
+<th>preguntas</th>
+<th>proporción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>camino correcto</td>
+<td>19</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>camino equivocado, acierta</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>camino equivocado, falla</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>no aplica (sin herramienta_esperada)</td>
+<td>1</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2>Guardarraíl</h2>
+<table>
+<thead>
+<tr>
+<th>guardarraíl</th>
+<th>valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>preguntas con intervención del guardarraíl</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>intervenciones totales</td>
+<td>0</td>
+</tr>
+<tr>
+<td>recuperadas tras intervenir (respuesta correcta)</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>preguntas que agotaron el límite de llamadas</td>
+<td>0</td>
+</tr>
+<tr>
+<td>alucinaciones sobre hueco</td>
+<td>1</td>
+</tr>
+<tr>
+<td>abstenciones indebidas (dijo «no hay dato» y sí lo había)</td>
+<td>0%</td>
+</tr>
+</tbody>
+</table>
+<h2>Retrieval</h2>
+<table>
+<thead>
+<tr>
+<th>recall@1</th>
+<th>recall@3</th>
+<th>recall@5</th>
+<th>recall@10</th>
+<th>MRR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0%</td>
+<td>0%</td>
+<td>25%</td>
+<td>25%</td>
+<td>0.06</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>pregunta</th>
+<th>puesto del ancla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>g-r-005</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-006</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-007</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-008</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-009</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-010</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-011</td>
+<td>5</td>
+</tr>
+<tr>
+<td>g-r-012</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-017</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-018</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-019</td>
+<td>4</td>
+</tr>
+<tr>
+<td>g-r-020</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h2>Por pregunta</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>familia</th>
+<th>acierto</th>
+<th>herramientas</th>
+<th>qué falló</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>g-r-001</td>
+<td>numerica</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; search_filings &gt; search_filings &gt; get_xbrl_fact &gt; get_xbrl_fact</td>
+<td>cita_no_literal (1), alucinacion_sobre_hueco (1), fuente_no_ninguna (1)</td>
+</tr>
+<tr>
+<td>g-r-002</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-003</td>
+<td>numerica</td>
+<td>sí</td>
+<td>get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-004</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-005</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-006</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-007</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-008</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-009</td>
+<td>extractiva</td>
+<td>error</td>
+<td>—</td>
+<td>error de ejecución (1)</td>
+</tr>
+<tr>
+<td>g-r-010</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-011</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-012</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-013</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; get_xbrl_fact &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-014</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-015</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-016</td>
+<td>numerica</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; search_filings</td>
+<td>fuente_no_ninguna (1)</td>
+</tr>
+<tr>
+<td>g-r-017</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cita_no_literal (1)</td>
+</tr>
+<tr>
+<td>g-r-018</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>no_respalda_ancla (1), cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-019</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-020</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+</tbody>
+</table>
+<p>Tres cosas que se leen ahí y que orientan el trabajo de mejora:</p>
+<ul>
+<li><strong>Enruta bien y contesta mal.</strong> La trayectoria es correcta en todas las
+preguntas en las que aplica: el agente va a XBRL cuando la pregunta es
+numérica y al texto cuando es un matiz. El problema no es la elección de
+herramienta.</li>
+<li><strong>Las comparativas son el agujero.</strong> Ninguna sale. El patrón es siempre el
+mismo: consulta un ejercicio, consulta el otro y falla al combinarlos o
+arrastra la cifra de uno de los dos. Es lo que hay que atacar primero.</li>
+<li><strong>Hay una alucinación sobre hueco.</strong> Con el dato ausente del corpus, el
+sistema dio una cifra igualmente. Es el fallo más caro de los que mide la
+tabla y es exactamente lo que el guardarraíl tiene que parar.</li>
+</ul>
+<p>Una pregunta murió con un error del proveedor (<code>BadRequestResponseError</code>) y
+cuenta como fallo: la ejecución continúa y lo deja escrito en vez de
+interrumpirse, que es la regla del ejecutor. Está en la columna «qué falló» como
+error de ejecución.</p>
 <h2>6. Las diez preguntas ciegas</h2>
 <p class="aviso">PENDIENTE: falta docs\informe\delta_ciegas.md. Se genera ejecutando el repositorio.</p>
 <p>Si el delta baja, la parte de la mejora que era memoria del conjunto con el que
