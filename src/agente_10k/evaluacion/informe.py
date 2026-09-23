@@ -330,7 +330,7 @@ def cargar_informe(ruta: Path) -> InformeEvaluacion:
 
 def _csv_principal(informes: Sequence[InformeEvaluacion], destino: Path) -> None:
     with destino.open("w", encoding="utf-8", newline="") as f:
-        escritor = csv.writer(f)
+        escritor = csv.writer(f, lineterminator="\n")
         escritor.writerow(["sistema", *COLUMNAS_PRINCIPAL])
         for informe in informes:
             fila = fila_principal(informe)
@@ -353,7 +353,7 @@ def generar_todo(dir_resultados: Path, destino: Path) -> list[Path]:
 
     def escribir(nombre: str, texto: str) -> None:
         ruta = destino / nombre
-        ruta.write_text(texto, encoding="utf-8")
+        ruta.write_text(texto, encoding="utf-8", newline="\n")
         escritos.append(ruta)
 
     for etiqueta, informe in informes.items():

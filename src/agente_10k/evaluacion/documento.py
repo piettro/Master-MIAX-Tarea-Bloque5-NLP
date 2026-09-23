@@ -110,8 +110,8 @@ def generar(plantilla: Path, raiz: Path, destino: Path, titulo: str) -> list[Pat
     texto = componer(plantilla, raiz)
     ruta_md = destino / "informe.md"
     ruta_html = destino / "informe.html"
-    ruta_md.write_text(texto, encoding="utf-8")
-    ruta_html.write_text(a_html(texto, titulo), encoding="utf-8")
+    ruta_md.write_text(texto, encoding="utf-8", newline="\n")
+    ruta_html.write_text(a_html(texto, titulo), encoding="utf-8", newline="\n")
     escritos = [ruta_md, ruta_html]
     pdf = a_pdf(ruta_html, destino / "informe.pdf")
     if pdf is not None:

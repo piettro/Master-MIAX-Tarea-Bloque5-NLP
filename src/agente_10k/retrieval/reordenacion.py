@@ -69,29 +69,24 @@ class ConReordenacion:
         pares = [(consulta, f.texto) for f in candidatos]
         modelo = _cross_encoder(self._modelo)
         puntuaciones = modelo.predict(pares)  # type: ignore[attr-defined]
-        ordenados = sorted(
-            zip(candidatos, puntuaciones, strict=True),
-            key=lambda par: float(par[1]),
+        # Los puestos van por POSICIÓN, no por `chunk_id`: si el recuperador
+        # devolviera el mismo fragmento dos veces, un diccionario por id se
+        # comería una de las dos y el orden saldría mal.
+        orden = sorted(
+            range(len(candidatos)),
+            key=lambda i: float(puntuaciones[i]),
             reverse=True,
         )
         if not self._fusionar:
-            return [f.con_puntuacion(float(p)) for f, p in ordenados[:k]]
+            return [
+                candidatos[i].con_puntuacion(float(puntuaciones[i])) for i in orden[:k]
+            ]
 
         # RRF entre los dos órdenes: el del recuperador y el del cross-encoder.
-        puesto_base = {f.chunk_id: i for i, f in enumerate(candidatos, 1)}
-        puesto_ce = {f.chunk_id: i for i, (f, _) in enumerate(ordenados, 1)}
-        fusionados = sorted(
-            candidatos,
-            key=lambda f: (
-                1 / (K_RRF + puesto_base[f.chunk_id])
-                + 1 / (K_RRF + puesto_ce[f.chunk_id])
-            ),
-            reverse=True,
-        )
-        return [
-            f.con_puntuacion(
-                1 / (K_RRF + puesto_base[f.chunk_id])
-                + 1 / (K_RRF + puesto_ce[f.chunk_id])
-            )
-            for f in fusionados[:k]
-        ]
+        puesto_ce = {i: puesto for puesto, i in enumerate(orden, 1)}
+        rrf = {
+            i: 1 / (K_RRF + i + 1) + 1 / (K_RRF + puesto_ce[i])
+            for i in range(len(candidatos))
+        }
+        fusionados = sorted(rrf, key=lambda i: rrf[i], reverse=True)
+        return [candidatos[i].con_puntuacion(rrf[i]) for i in fusionados[:k]]

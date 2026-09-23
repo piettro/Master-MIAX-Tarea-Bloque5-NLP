@@ -25,6 +25,7 @@ resultados de otro.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import TypedDict, cast
@@ -112,12 +113,19 @@ class ConReescritura:
         }
 
     def _escribir_cache(self) -> None:
+        # Escritura atómica: se vuelca a un temporal y se renombra. Medir la
+        # ablación lanza varias configuraciones que tocan la misma caché, y un
+        # fichero a medio escribir la deja inservible para la siguiente.
         if self._ruta_cache is None:
             return
         self._ruta_cache.parent.mkdir(parents=True, exist_ok=True)
-        self._ruta_cache.write_text(
-            json.dumps(self._cache, ensure_ascii=False, indent=1), encoding="utf-8"
+        temporal = self._ruta_cache.with_suffix(f".{os.getpid()}.tmp")
+        temporal.write_text(
+            json.dumps(self._cache, ensure_ascii=False, indent=1),
+            encoding="utf-8",
+            newline="\n",
         )
+        temporal.replace(self._ruta_cache)
 
     def reescribir(self, consulta: str) -> str:
         """La consulta reescrita para el corpus: en inglés y con su jerga.

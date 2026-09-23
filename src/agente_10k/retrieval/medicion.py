@@ -303,10 +303,10 @@ def escribir_ablacion(
     ruta_csv = dir_salida / "ablacion.csv"
     ruta_detalle = dir_salida / "ablacion_detalle.csv"
 
-    ruta_md.write_text(tabla_markdown(filas, ks), encoding="utf-8")
+    ruta_md.write_text(tabla_markdown(filas, ks), encoding="utf-8", newline="\n")
 
     with ruta_csv.open("w", newline="", encoding="utf-8") as f:
-        escritor = csv.writer(f)
+        escritor = csv.writer(f, lineterminator="\n")
         escritor.writerow([*_cabeceras(ks), "n_preguntas", "pendiente"])
         for fila in filas:
             escritor.writerow(
@@ -326,7 +326,7 @@ def escribir_ablacion(
     # cuánto subió la media.
     ids = sorted({pid for fila in filas for pid in fila.puestos})
     with ruta_detalle.open("w", newline="", encoding="utf-8") as f:
-        escritor = csv.writer(f)
+        escritor = csv.writer(f, lineterminator="\n")
         escritor.writerow(["pregunta_id", *(fila.nombre for fila in filas)])
         for pid in ids:
             fila_pid: list[object] = [pid]
@@ -339,7 +339,9 @@ def escribir_ablacion(
             escritor.writerow(fila_pid)
 
     ruta_significancia = dir_salida / "significancia.md"
-    ruta_significancia.write_text(tabla_significancia(filas), encoding="utf-8")
+    ruta_significancia.write_text(
+        tabla_significancia(filas), encoding="utf-8", newline="\n"
+    )
     return [ruta_md, ruta_csv, ruta_detalle, ruta_significancia]
 
 

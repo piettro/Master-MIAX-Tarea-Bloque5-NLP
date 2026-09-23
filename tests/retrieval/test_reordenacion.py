@@ -78,3 +78,46 @@ def test_con_un_solo_candidato_no_llama_al_modelo(cross_encoder_falso):
 
 def test_el_nombre_dice_que_hay_reordenacion(cross_encoder_falso):
     assert ConReordenacion(RecuperadorFalso([])).nombre == "falso+reordenacion"
+
+
+class TestFusionRrf:
+    """Con `fusionar`, el cross-encoder opina pero no manda solo."""
+
+    def test_mezcla_los_dos_ordenes(self, cross_encoder_falso):
+        """El cross-encoder sube al tercero sin tirar al primero del recuperador.
+
+        Puro habría devuelto c, a, b. Fusionado, «a» conserva su puesto porque
+        el recuperador lo tenía primero, y «c» adelanta a «b» porque el
+        cross-encoder es el único que lo vio.
+        """
+        base = RecuperadorFalso(
+            [
+                frag("a", "nada"),
+                frag("b", "nada"),
+                frag("c", "riesgo de tipo de cambio"),
+            ]
+        )
+        salida = ConReordenacion(base, profundidad=10, fusionar=True).recuperar(
+            "tipo de cambio", k=3
+        )
+        assert [f.chunk_id for f in salida] == ["a", "c", "b"]
+
+    def test_no_tira_de_la_lista_a_nadie(self, cross_encoder_falso):
+        """Fusionar reordena; el conjunto de candidatos del top-k no encoge."""
+        base = RecuperadorFalso([frag(str(i), f"texto {i}") for i in range(10)])
+        salida = ConReordenacion(base, profundidad=10, fusionar=True).recuperar(
+            "texto", k=10
+        )
+        assert len(salida) == 10
+
+    def test_aguanta_chunk_ids_repetidos(self, cross_encoder_falso):
+        """Un recuperador que devuelva el mismo fragmento dos veces no lo rompe."""
+        base = RecuperadorFalso([frag("a", "riesgo"), frag("a", "riesgo")])
+        salida = ConReordenacion(base, profundidad=10, fusionar=True).recuperar(
+            "riesgo", k=2
+        )
+        assert len(salida) == 2
+
+    def test_el_nombre_distingue_los_dos_modos(self, cross_encoder_falso):
+        base = RecuperadorFalso([])
+        assert ConReordenacion(base, fusionar=True).nombre.endswith("reordenacion-rrf")

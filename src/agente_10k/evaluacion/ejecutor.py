@@ -302,8 +302,10 @@ def guardar(informe: InformeEvaluacion, destino: Path) -> None:
     from agente_10k.evaluacion.informe import tablas_de_sistema
 
     destino.mkdir(parents=True, exist_ok=True)
+    # Los resultados se escriben SIEMPRE con LF: el sello del baseline son
+    # huellas SHA-256, y un CRLF en Windows las cambia todas.
     (destino / "informe.json").write_text(
-        informe.model_dump_json(indent=2), encoding="utf-8"
+        informe.model_dump_json(indent=2), encoding="utf-8", newline="\n"
     )
     meta = informe.model_dump(
         mode="json",
@@ -319,12 +321,16 @@ def guardar(informe: InformeEvaluacion, destino: Path) -> None:
         },
     )
     (destino / "meta.json").write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(meta, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     filas = [fila_plana(r) for r in informe.resultados]
     if filas:
         with (destino / "detalle.csv").open("w", encoding="utf-8", newline="") as f:
-            escritor = csv.DictWriter(f, fieldnames=list(filas[0]))
+            escritor = csv.DictWriter(f, fieldnames=list(filas[0]), lineterminator="\n")
             escritor.writeheader()
             escritor.writerows(filas)
-    (destino / "resumen.md").write_text(tablas_de_sistema(informe), encoding="utf-8")
+    (destino / "resumen.md").write_text(
+        tablas_de_sistema(informe), encoding="utf-8", newline="\n"
+    )
