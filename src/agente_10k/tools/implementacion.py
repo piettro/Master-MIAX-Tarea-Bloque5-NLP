@@ -139,7 +139,29 @@ class Herramientas:
         return formato.seccion(seccion, tope)
 
 
-def herramientas_por_defecto(config: Settings | None = None) -> Herramientas:
+def _proveedor_para_reescritura(cfg: Settings) -> object | None:
+    """Quien reescribe la consulta, si la configuración lo pide.
+
+    La fábrica de la fase 4 manda; mientras no exista, vale el proveedor pelado
+    de la evaluación. Sin esto, activar `reescritura_consulta` dejaba a
+    `search_filings` sin recuperador y el agente buscaba a ciegas.
+    """
+    if not cfg.reescritura_consulta:
+        return None
+    try:
+        from agente_10k.agente.proveedores import construir_proveedor
+
+        return construir_proveedor(cfg)
+    except NotImplementedError:
+        from agente_10k.evaluacion.sistemas import ProveedorMedicion
+
+        return ProveedorMedicion(cfg)
+
+
+def herramientas_por_defecto(
+    config: Settings | None = None,
+    proveedor: object | None = None,
+) -> Herramientas:
     """El cinturón montado desde la configuración del proceso.
 
     Si el recuperador no se puede construir —falta el índice, falta el modelo
@@ -155,7 +177,11 @@ def herramientas_por_defecto(config: Settings | None = None) -> Herramientas:
     try:
         from agente_10k.retrieval.fabrica import construir_recuperador
 
-        recuperador = construir_recuperador(corpus, cfg)
+        recuperador = construir_recuperador(
+            corpus,
+            cfg,
+            proveedor or _proveedor_para_reescritura(cfg),  # type: ignore[arg-type]
+        )
     except Exception as exc:  # se conserva el motivo: no se traga, se informa
         motivo = f"{type(exc).__name__}: {exc}"
         _log.warning("no se pudo construir el recuperador: %s", motivo)
