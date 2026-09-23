@@ -146,9 +146,13 @@ def _medir_recall(
     if corpus is None or not any(p.ancla_texto for p in preguntas):
         return {}, {}, None
     try:
-        from agente_10k.retrieval.fabrica import construir_recuperador
+        from agente_10k.retrieval.fabrica import (
+            construir_recuperador,
+            proveedor_de_reescritura,
+        )
 
-        recuperador = construir_recuperador(corpus, cfg)
+        # El mismo recuperador que usa el agente, proveedor incluido.
+        recuperador = construir_recuperador(corpus, cfg, proveedor_de_reescritura(cfg))
         recall, puestos = medir_recall(
             preguntas, recuperador, usar_filtros=cfg.filtro_metadatos
         )

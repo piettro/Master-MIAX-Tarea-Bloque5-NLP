@@ -25,6 +25,26 @@ from agente_10k.retrieval.codificador import CodificadorBge
 from agente_10k.retrieval.denso import RecuperadorDenso
 
 
+def proveedor_de_reescritura(cfg: Settings) -> ProveedorLLM | None:
+    """Quien reescribe la consulta, si la configuración lo pide.
+
+    La fábrica de la fase 4 manda; mientras no exista, vale el proveedor pelado
+    de la evaluación. Está aquí y no en cada llamante para que el agente y la
+    medición del recall usen exactamente el mismo recuperador: medir una
+    configuración distinta de la que responde no vale nada.
+    """
+    if not cfg.reescritura_consulta:
+        return None
+    try:
+        from agente_10k.agente.proveedores import construir_proveedor
+
+        return construir_proveedor(cfg)  # type: ignore[return-value]
+    except NotImplementedError:
+        from agente_10k.evaluacion.sistemas import ProveedorMedicion
+
+        return ProveedorMedicion(cfg)
+
+
 def construir_recuperador(
     corpus: Corpus,
     config: Settings | None = None,

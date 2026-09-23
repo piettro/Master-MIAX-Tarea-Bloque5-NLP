@@ -62,9 +62,13 @@ camino no generaliza. Hay un evaluador escrito para detectarlo.
 
 ```bash
 make setup     lint     test     cobertura
-make baseline  final    informe  ablacion
+make baseline  final    informe  pdf       ablacion
 make validar-golden
 ```
+
+`make pdf` monta `docs/informe/informe.pdf` desde `docs/informe/plantilla.md`:
+la prosa es la plantilla y las tablas se incluyen desde `resultados/`. Lo que
+todavía no existe sale como PENDIENTE y el PDF se genera igual.
 
 Sin `make` —Windows— lo mismo con `python scripts/tareas.py <objetivo>`.
 
@@ -86,7 +90,11 @@ docs/decisiones.md  los ADR: por qué cada cosa es como es
 
 ## Estado
 
-Fase 0 cerrada: dominio, corpus y herramientas implementados y probados;
-retrieval, agente y evaluación son stubs con tests en rojo que describen lo que
-tienen que hacer. `docs/decisiones.md` y `prompts/PROMPTS_POR_FASE.md` dicen qué
-falta y de quién es cada fase.
+Hechos: dominio, corpus, herramientas, retrieval con su tabla de ablación,
+golden set de 20 preguntas, evaluación completa y el informe en PDF. El
+baseline está ejecutado y congelado en `resultados/baseline/` con su
+`SELLO.json`.
+
+Falta la fase 4 —el agente final, su middleware y el guardarraíl XBRL—, y con
+ella la mitad derecha de la tabla del informe. `docs/decisiones.md` y
+`prompts/PROMPTS_POR_FASE.md` dicen qué falta y de quién es cada fase.

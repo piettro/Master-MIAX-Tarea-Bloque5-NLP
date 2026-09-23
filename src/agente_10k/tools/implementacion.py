@@ -139,7 +139,10 @@ class Herramientas:
         return formato.seccion(seccion, tope)
 
 
-def herramientas_por_defecto(config: Settings | None = None) -> Herramientas:
+def herramientas_por_defecto(
+    config: Settings | None = None,
+    proveedor: object | None = None,
+) -> Herramientas:
     """El cinturón montado desde la configuración del proceso.
 
     Si el recuperador no se puede construir —falta el índice, falta el modelo
@@ -153,9 +156,16 @@ def herramientas_por_defecto(config: Settings | None = None) -> Herramientas:
     recuperador: Recuperador | None = None
     motivo: str | None = None
     try:
-        from agente_10k.retrieval.fabrica import construir_recuperador
+        from agente_10k.retrieval.fabrica import (
+            construir_recuperador,
+            proveedor_de_reescritura,
+        )
 
-        recuperador = construir_recuperador(corpus, cfg)
+        recuperador = construir_recuperador(
+            corpus,
+            cfg,
+            proveedor or proveedor_de_reescritura(cfg),  # type: ignore[arg-type]
+        )
     except Exception as exc:  # se conserva el motivo: no se traga, se informa
         motivo = f"{type(exc).__name__}: {exc}"
         _log.warning("no se pudo construir el recuperador: %s", motivo)

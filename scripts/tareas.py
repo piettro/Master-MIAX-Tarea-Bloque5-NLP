@@ -100,6 +100,11 @@ def informe(_: Sequence[str]) -> None:
     _correr(PY, "-m", "agente_10k.cli", "informe")
 
 
+def pdf(_: Sequence[str]) -> None:
+    """Monta el informe entero en PDF desde la plantilla."""
+    _correr(PY, "-m", "agente_10k.cli", "informe", "--pdf")
+
+
 def ablacion(_: Sequence[str]) -> None:
     """Regenera la tabla de ablación del retrieval desde cero."""
     _correr(PY, "-m", "agente_10k.cli", "ablacion")
@@ -145,6 +150,7 @@ OBJETIVOS = {
     "baseline": baseline,
     "final": final,
     "informe": informe,
+    "pdf": pdf,
     "ablacion": ablacion,
     "validar-golden": validar_golden,
     "reconstruir-secciones": reconstruir_secciones,
