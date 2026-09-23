@@ -1,7 +1,5 @@
 """Decorador que reescribe la consulta con el LLM. FASE 3 — Alonso.
 
-STUB. Las firmas y el contrato están fijados; el cuerpo es de la fase 3.
-
 P2: Decorator, igual que el filtro. Reescribe la consulta antes de pasarla al
 recuperador envuelto: la pregunta del usuario llega en español y en lenguaje de
 persona, y el corpus está en inglés y en lenguaje de abogado. «¿Qué riesgos de
@@ -11,16 +9,49 @@ deployment and use of artificial intelligence systems».
 **Esta mejora CUESTA.** Añade una llamada al modelo por búsqueda, y eso entra en
 la columna de coste y en la de latencia de la tabla del informe. Es el ejemplo
 de libro de un arreglo razonable que puede no compensar: medirlo y contarlo, aun
-si no compensa, es la sección más valiosa de la presentación.
+si no compensa, es la sección más valiosa de la presentación. Por eso el coste
+se contabiliza aparte (`uso_acumulado`) en lugar de esconderse.
 
 La reescritura se cachea por consulta: reejecutar el golden set no puede costar
-dinero dos veces.
+dinero dos veces. La caché es en memoria del proceso y, si se le da una ruta,
+también en disco. Lo segundo no es por dinero: el modelo no devuelve siempre la
+misma reescritura ni con temperatura 0, y sin caché en disco dos ejecuciones de
+la misma tabla de ablación dan números distintos y ninguna fila es comparable
+con la de al lado. La contrapartida —arrastrar reescrituras viejas— se paga
+borrando el fichero, y la clave lleva el modelo para que cambiarlo no sirva
+resultados de otro.
 """
 
 from __future__ import annotations
 
+import json
+import os
+import time
+from pathlib import Path
+from typing import TypedDict, cast
+
 from agente_10k.dominio.modelos import Filtros, Fragmento, UsoTokens
 from agente_10k.dominio.protocolos import ProveedorLLM, Recuperador
+
+# El sistema de la reescritura vive aquí, versionado como el resto de prompts:
+# le pedimos una consulta, no una conversación, y en el idioma y la jerga del
+# corpus. "Devuelve solo la consulta" evita que el modelo conteste con prosa que
+# luego contaminaría la búsqueda.
+_SISTEMA_REESCRITURA = (
+    "Rewrite the user's question as a concise English search query for a corpus "
+    "of SEC 10-K filings. Use the terminology of the filings themselves. "
+    "Return only the rewritten query, with no explanation."
+)
+
+
+class _Entrada(TypedDict):
+    """Lo que se guarda de cada reescritura: el texto y lo que costó sacarlo."""
+
+    consulta: str
+    tokens_entrada: int
+    tokens_salida: int
+    coste_usd: float | None
+    latencia_s: float
 
 
 class ConReescritura:
@@ -31,31 +62,130 @@ class ConReescritura:
         interno: Recuperador,
         proveedor: ProveedorLLM,
         cachear: bool = True,
+        ruta_cache: Path | None = None,
     ) -> None:
         """Envuelve `interno` con una reescritura previa de la consulta.
 
         Args:
             interno: El recuperador envuelto.
             proveedor: Quien reescribe. En los tests, un `ProveedorFake`.
-            cachear: Si se guarda la reescritura de cada consulta en disco.
-
-        Raises:
-            NotImplementedError: Fase 3.
+            cachear: Si se guarda la reescritura de cada consulta en memoria para
+                no volver a llamar al modelo —ni a pagar— por la misma pregunta.
+            ruta_cache: Si se da, la caché también se lee y se escribe ahí, y la
+                tabla de ablación deja de moverse entre ejecuciones.
         """
-        raise NotImplementedError("Fase 3 · Alonso: reescritura de consulta")
+        self._interno = interno
+        self._proveedor = proveedor
+        self._cachear = cachear
+        self._ruta_cache = ruta_cache if cachear else None
+        # Cada entrada guarda la reescritura Y lo que costó sacarla. Sin eso, la
+        # segunda ejecución de la tabla diría que reescribir es gratis.
+        self._cache: dict[str, _Entrada] = self._leer_cache()
+        self._latencia_ahorrada = 0.0
+        # Coste acumulado de TODAS las reescrituras reales (las que fueron a
+        # modelo, no las servidas de caché). Empieza en cero y solo crece cuando
+        # hay una llamada de verdad: así la columna de coste refleja el gasto
+        # real y no cuenta dos veces la misma consulta.
+        self._uso = UsoTokens()
 
     @property
     def nombre(self) -> str:
         """Identificador para la traza y la tabla de ablación."""
-        return "reescritura+?"
+        return f"reescritura+{self._interno.nombre}"
+
+    def _clave(self, consulta: str) -> str:
+        """La consulta y el modelo que la reescribió: cambiar de modelo invalida."""
+        return f"{self._proveedor.modelo}|{consulta}"
+
+    def _leer_cache(self) -> dict[str, _Entrada]:
+        if self._ruta_cache is None or not self._ruta_cache.is_file():
+            return {}
+        try:
+            datos = json.loads(self._ruta_cache.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}  # una caché rota no puede tumbar una medición
+        if not isinstance(datos, dict):
+            return {}
+        return {
+            str(k): cast("_Entrada", v)
+            for k, v in datos.items()
+            if isinstance(v, dict) and "consulta" in v
+        }
+
+    def _escribir_cache(self) -> None:
+        # Escritura atómica: se vuelca a un temporal y se renombra. Medir la
+        # ablación lanza varias configuraciones que tocan la misma caché, y un
+        # fichero a medio escribir la deja inservible para la siguiente.
+        if self._ruta_cache is None:
+            return
+        self._ruta_cache.parent.mkdir(parents=True, exist_ok=True)
+        temporal = self._ruta_cache.with_suffix(f".{os.getpid()}.tmp")
+        temporal.write_text(
+            json.dumps(self._cache, ensure_ascii=False, indent=1),
+            encoding="utf-8",
+            newline="\n",
+        )
+        temporal.replace(self._ruta_cache)
 
     def reescribir(self, consulta: str) -> str:
         """La consulta reescrita para el corpus: en inglés y con su jerga.
 
-        Raises:
-            NotImplementedError: Fase 3.
+        Si la consulta ya está en caché, se devuelve sin llamar al modelo y sin
+        sumar coste. Si no, se llama una vez, se suma su uso y se guarda.
         """
-        raise NotImplementedError("Fase 3 · Alonso: reescritura de consulta")
+        clave = self._clave(consulta)
+        if self._cachear and clave in self._cache:
+            return self._de_cache(self._cache[clave])
+
+        chat = self._proveedor.chat()
+        inicio = time.perf_counter()
+        respuesta = chat.invoke(  # type: ignore[attr-defined]
+            [("system", _SISTEMA_REESCRITURA), ("human", consulta)]
+        )
+        latencia = time.perf_counter() - inicio
+        # La respuesta puede ser un mensaje del framework (con `.content`) o —en
+        # el `ProveedorFake` de los tests— la cadena tal cual. `getattr` cubre
+        # los dos casos sin acoplar el dominio al tipo de LangChain.
+        texto = getattr(respuesta, "content", respuesta)
+        reescrita = str(texto).strip()
+
+        # El coste se LEE del proveedor (usage_metadata), no se estima: es lo que
+        # hace que la fila de la reescritura en la tabla cuadre con la factura.
+        uso = self._proveedor.uso_ultima_llamada()
+        self._uso = self._uso + uso
+        if self._cachear:
+            self._cache[clave] = _Entrada(
+                consulta=reescrita,
+                tokens_entrada=uso.tokens_entrada,
+                tokens_salida=uso.tokens_salida,
+                coste_usd=uso.coste_usd,
+                latencia_s=latencia,
+            )
+            self._escribir_cache()
+        return reescrita
+
+    def _de_cache(self, entrada: _Entrada) -> str:
+        """La reescritura guardada, sumando lo que costó la primera vez.
+
+        La caché ahorra dinero y tiempo de verdad, pero la tabla compara
+        TÉCNICAS: si los aciertos de caché contaran cero, la fila de la
+        reescritura saldría gratis e instantánea, que es justo lo contrario de
+        lo que hay que enseñar.
+        """
+        self._uso = self._uso + UsoTokens(
+            tokens_entrada=entrada.get("tokens_entrada") or 0,
+            tokens_salida=entrada.get("tokens_salida") or 0,
+            coste_usd=entrada.get("coste_usd"),
+        )
+        self._latencia_ahorrada += entrada.get("latencia_s") or 0.0
+        return str(entrada["consulta"])
+
+    def latencia_ahorrada(self) -> float:
+        """Segundos de llamada al modelo que se ahorró la caché en esta pasada.
+
+        La medición los vuelve a sumar: la caché no existe la primera vez.
+        """
+        return self._latencia_ahorrada
 
     def recuperar(
         self,
@@ -65,18 +195,16 @@ class ConReescritura:
     ) -> list[Fragmento]:
         """Los `k` mejores para la consulta reescrita.
 
-        Raises:
-            NotImplementedError: Fase 3.
+        La reescritura solo cambia la CONSULTA; los filtros y `k` pasan intactos
+        al recuperador envuelto.
         """
-        raise NotImplementedError("Fase 3 · Alonso: recuperación con reescritura")
+        return self._interno.recuperar(self.reescribir(consulta), filtros, k)
 
     def uso_acumulado(self) -> UsoTokens:
         """Tokens y coste que ha añadido la reescritura.
 
         Va a la columna de coste de la tabla de ablación: sin esto, la fila de
-        la reescritura parecería gratis.
-
-        Raises:
-            NotImplementedError: Fase 3.
+        la reescritura parecería gratis, que es justo el error que la práctica
+        pide no cometer.
         """
-        raise NotImplementedError("Fase 3 · Alonso: contabilidad de la reescritura")
+        return self._uso

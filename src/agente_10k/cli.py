@@ -12,10 +12,15 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 import typer
 
-from agente_10k.config import settings
+from agente_10k.config import RAIZ_REPO, settings
+
+if TYPE_CHECKING:
+    from agente_10k.dominio.modelos import ResultadoPregunta
+    from agente_10k.dominio.protocolos import ProveedorLLM
 
 RUTA_GOLDEN_POR_DEFECTO = typer.Argument(Path("golden/golden_set.jsonl"))
 
@@ -24,6 +29,25 @@ app = typer.Typer(
     help="Agente investigador sobre informes 10-K de la SEC.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def _entorno() -> None:
+    """Carga `.env` antes de cualquier orden, para que la clave llegue al SDK."""
+    from agente_10k.evaluacion.sistemas import cargar_entorno
+
+    cargar_entorno()
+
+
+def _imprimir_progreso(n: int, total: int, r: ResultadoPregunta) -> None:
+    """Una línea por pregunta mientras se evalúa: el día 24 hay que ver avanzar."""
+    if r.error:
+        estado = f"ERROR {r.error[:90]}"
+    else:
+        estado = {True: "acierto", False: "fallo", None: "sin veredicto"}[r.acierto]
+    camino = " > ".join(r.traza.trayectoria) if r.traza else ""
+    segundos = f"{r.traza.latencia_s:.1f} s" if r.traza else ""
+    print(f"[{n}/{total}] {r.pregunta_id:<10} {estado:<14} {segundos:>7}  {camino}")
 
 
 @app.command()
@@ -71,13 +95,28 @@ def responder(pregunta: str) -> None:
 @app.command()
 def evaluar(
     ruta_jsonl: Path,
-    etiqueta: str = typer.Option("final", help="Subcarpeta de resultados/"),
+    etiqueta: str | None = typer.Option(
+        None, help="Subcarpeta de resultados/. Por defecto final, o ciegas."
+    ),
+    sistema: str = typer.Option("final", help="final | baseline"),
+    recall: bool = typer.Option(True, help="Medir el recall@k del retrieval"),
 ) -> None:
     """Ejecuta el sistema sobre un JSONL de preguntas y escribe los resultados."""
     from agente_10k.evaluacion.ejecutor import evaluar as _evaluar
+    from agente_10k.evaluacion.informe import tabla_comparada
+    from agente_10k.evaluacion.sistemas import SistemaBaseline
 
-    informe = _evaluar(ruta_jsonl, etiqueta=etiqueta)
-    print(informe)
+    elegido = SistemaBaseline() if sistema == "baseline" else None
+    informe = _evaluar(
+        ruta_jsonl,
+        etiqueta=etiqueta,
+        sistema=elegido,
+        medir_retrieval=recall,
+        progreso=_imprimir_progreso,
+    )
+    print(f"\n{informe}\n")
+    print(tabla_comparada([informe]))
+    print(f"escrito en {settings().dir_resultados / informe.etiqueta}")
 
 
 @app.command(name="validar-golden")
@@ -95,30 +134,146 @@ def validar_golden(ruta_jsonl: Path) -> None:
 def baseline(
     ruta_jsonl: Path = RUTA_GOLDEN_POR_DEFECTO,
 ) -> None:
-    """Ejecuta el baseline del profesor y lo CONGELA. HITO 1, irreversible."""
-    print(
-        "El baseline se ejecuta con la implementación del profesor, que está "
-        "en src/agente_10k/baseline/ sin modificar.\n"
-        "Pendiente de la fase 1: ver resultados/README.md para el protocolo "
-        "de congelación."
+    """Ejecuta el baseline del profesor y lo CONGELA. HITO 1, irreversible.
+
+    El sistema es `miax_s2.baseline()`, el agente del día 10 que reparte el
+    profesor, con el mismo modelo que el sistema final. El recall@k se mide con
+    el retrieval de partida: denso, sin filtro previo y sin reescritura.
+    """
+    from agente_10k.evaluacion.ejecutor import evaluar as _evaluar
+    from agente_10k.evaluacion.informe import tabla_comparada
+    from agente_10k.evaluacion.sistemas import SistemaBaseline
+
+    sys.path.insert(0, str(RAIZ_REPO / "scripts"))
+    import comprobar_baseline as guardian  # type: ignore[import-not-found]
+
+    if guardian.RUTA_SELLO.is_file():
+        print(
+            "resultados/baseline/ ya está CONGELADO. Si de verdad hay que "
+            "regenerarlo, borra SELLO.json a mano y deja constancia en "
+            "docs/decisiones.md de por qué."
+        )
+        raise typer.Exit(1)
+
+    cfg = settings().model_copy(
+        update={
+            "recuperador": "denso",
+            "filtro_metadatos": False,
+            "reescritura_consulta": False,
+        }
     )
-    raise typer.Exit(1)
+    informe = _evaluar(
+        ruta_jsonl,
+        etiqueta="baseline",
+        sistema=SistemaBaseline(cfg),
+        config=cfg,
+        progreso=_imprimir_progreso,
+    )
+    print(f"\n{informe}\n")
+    print(tabla_comparada([informe]))
+    sello = guardian.sellar()
+    print(f"CONGELADO: {len(sello['huellas'])} ficheros sellados en SELLO.json")
 
 
 @app.command()
-def ablacion() -> None:
-    """Regenera la tabla de ablación del retrieval. FASE 3."""
-    print("Pendiente de la fase 3 (Alonso): retrieval/ y su runner de medición.")
-    raise typer.Exit(1)
+def ablacion(
+    ruta_golden: Path = RUTA_GOLDEN_POR_DEFECTO,
+) -> None:
+    """Regenera la tabla de ablación del retrieval. FASE 3.
+
+    Recorre `CONFIGURACIONES_ABLACION`, mide `recall@k` contra el ancla de texto
+    del golden set y escribe `resultados/retrieval/ablacion.{md,csv}` más el
+    detalle por pregunta. Necesita el corpus montado y un golden set con anclas;
+    si falta algo, lo dice en vez de escribir una tabla vacía.
+
+    La fila de la reescritura necesita un proveedor de LLM (fase 4): si no hay
+    clave, esa fila sale marcada como «pendiente» y las demás se miden igual.
+    """
+    from agente_10k.corpus import cargar_corpus
+    from agente_10k.dominio.errores import CorpusNoEncontrado
+    from agente_10k.evaluacion.ejecutor import leer_preguntas
+    from agente_10k.retrieval.medicion import (
+        ejecutar_ablacion,
+        escribir_ablacion,
+        tabla_markdown,
+    )
+
+    cfg = settings()
+    try:
+        corpus = cargar_corpus(cfg)
+    except CorpusNoEncontrado as exc:
+        print(f"No se puede medir: falta el corpus ({exc}).")
+        print("Descomprime corpus_miax_2026.zip e indice_faiss.zip en data/corpus/.")
+        raise typer.Exit(1) from exc
+
+    if not ruta_golden.is_file():
+        print(f"No se puede medir: no existe el golden set en {ruta_golden}.")
+        print("Escribe golden/golden_set.jsonl (fase 2) antes de medir el recall.")
+        raise typer.Exit(1)
+
+    preguntas = leer_preguntas(ruta_golden)
+    con_ancla = sum(1 for p in preguntas if p.ancla_texto)
+    if con_ancla == 0:
+        print(
+            f"El golden set tiene {len(preguntas)} preguntas pero ninguna con "
+            "ancla_texto: el recall@k se mide contra el ancla, así que no hay "
+            "nada que medir todavía. Añade preguntas extractivas."
+        )
+        raise typer.Exit(1)
+
+    # El proveedor solo hace falta para la fila de la reescritura; si no hay
+    # clave, se mide el resto y esa fila queda pendiente, sin abortar.
+    proveedor: ProveedorLLM | None = None
+    if cfg.hay_clave():
+        try:
+            from agente_10k.agente.proveedores import construir_proveedor
+
+            proveedor = cast("ProveedorLLM", construir_proveedor(cfg))
+        except NotImplementedError:
+            # Fase 4 sin implementar: para medir basta un chat pelado.
+            from agente_10k.evaluacion.sistemas import ProveedorMedicion
+
+            proveedor = ProveedorMedicion(cfg)
+
+    filas = ejecutar_ablacion(corpus, preguntas, cfg, proveedor)
+    rutas = escribir_ablacion(filas, cfg.dir_resultados / "retrieval")
+
+    origen = getattr(proveedor, "origen_coste", None)
+    print(f"Medidas {con_ancla} preguntas con ancla, de {len(preguntas)}.")
+    if origen:
+        print(f"Coste de la reescritura: {origen}.")
+    print()
+    print(tabla_markdown(filas))
+    for ruta in rutas:
+        print(f"escrito {ruta}")
 
 
 @app.command()
-def informe() -> None:
+def informe(
+    pdf: bool = typer.Option(False, help="Montar además el informe en PDF"),
+) -> None:
     """Regenera todas las tablas del informe desde resultados/. FASE 5."""
     from agente_10k.evaluacion.informe import generar_todo
 
     cfg = settings()
-    escritos = generar_todo(cfg.dir_resultados, Path("docs/informe"))
+    destino = RAIZ_REPO / "docs" / "informe"
+    escritos = generar_todo(cfg.dir_resultados, destino)
+    if pdf:
+        from agente_10k.evaluacion.documento import generar
+
+        plantilla = destino / "plantilla.md"
+        if not plantilla.is_file():
+            print(f"No hay plantilla en {plantilla}.")
+            raise typer.Exit(1)
+        montados = generar(
+            plantilla,
+            RAIZ_REPO,
+            destino,
+            "Un agente investigador sobre informes 10-K",
+        )
+        escritos += montados
+        if not any(r.suffix == ".pdf" for r in montados):
+            print("Sin Edge ni Chrome: queda el HTML, imprímelo desde el navegador.")
     for ruta in escritos:
         print(f"escrito {ruta}")
 
@@ -128,12 +283,19 @@ def comparar(
     baseline_etiqueta: str = "baseline",
     final_etiqueta: str = "final",
 ) -> None:
-    """La tabla baseline contra final. FASE 5."""
-    print(
-        f"Pendiente de la fase 5 (Raúl): comparar '{baseline_etiqueta}' con "
-        f"'{final_etiqueta}'."
-    )
-    raise typer.Exit(1)
+    """La tabla baseline contra final, con el mejor valor remarcado. FASE 5."""
+    from agente_10k.evaluacion.informe import cargar_informe, tabla_comparada
+
+    dir_resultados = settings().dir_resultados
+    rutas = [
+        dir_resultados / etiqueta / "informe.json"
+        for etiqueta in (baseline_etiqueta, final_etiqueta)
+    ]
+    faltan = [str(r) for r in rutas if not r.is_file()]
+    if faltan:
+        print(f"Falta ejecutar antes: {', '.join(faltan)}")
+        raise typer.Exit(1)
+    print(tabla_comparada([cargar_informe(r) for r in rutas]))
 
 
 @app.command(name="reconstruir-secciones")

@@ -63,10 +63,27 @@ def construir_recuperador(
         from agente_10k.retrieval.filtro_metadatos import ConFiltroMetadatos
 
         base = ConFiltroMetadatos(base, corpus.fragmentos)
+    if cfg.reordenacion:
+        from agente_10k.retrieval.reordenacion import ConReordenacion
+
+        # Va por dentro de la reescritura: el cross-encoder puntúa con la
+        # consulta ya traducida, que es donde gana.
+        base = ConReordenacion(
+            base,
+            cfg.modelo_reordenacion,
+            cfg.profundidad_reordenacion,
+            fusionar=cfg.fusion_reordenacion,
+        )
     if cfg.reescritura_consulta:
         from agente_10k.retrieval.reescritura import ConReescritura
 
-        base = ConReescritura(base, proveedor)  # type: ignore[arg-type]
+        ruta_cache = (cfg.dir_cache / "reescrituras.json") if cfg.cache_activa else None
+        base = ConReescritura(
+            base,
+            proveedor,  # type: ignore[arg-type]
+            cachear=cfg.cache_activa,
+            ruta_cache=ruta_cache,
+        )
     return base
 
 
@@ -118,6 +135,52 @@ CONFIGURACIONES_ABLACION: tuple[tuple[str, dict[str, object]], ...] = (
             "recuperador": "hibrido",
             "filtro_metadatos": True,
             "reescritura_consulta": True,
+        },
+    ),
+    (
+        "+ reordenación (cross-encoder)",
+        {
+            "recuperador": "denso",
+            "filtro_metadatos": True,
+            "reordenacion": True,
+        },
+    ),
+    (
+        "+ reescritura + reordenación",
+        {
+            "recuperador": "denso",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+        },
+    ),
+    (
+        "todo + reordenación",
+        {
+            "recuperador": "hibrido",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+        },
+    ),
+    (
+        "+ reescritura + reordenación (RRF)",
+        {
+            "recuperador": "denso",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+            "fusion_reordenacion": True,
+        },
+    ),
+    (
+        "todo + reordenación (RRF)",
+        {
+            "recuperador": "hibrido",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+            "fusion_reordenacion": True,
         },
     ),
 )

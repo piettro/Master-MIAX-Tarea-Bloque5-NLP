@@ -359,6 +359,24 @@ class ResultadoPregunta(BaseModel):
 
     pregunta_id: str
     familia: Familia | None = None
+    es_hueco: bool = Field(
+        default=False,
+        description="Si la respuesta correcta era que el dato no está (columna hueco)",
+    )
+    respuesta_correcta: bool | None = Field(
+        default=None,
+        description=(
+            "Si la respuesta es correcta sin mirar el camino. `None` cuando "
+            "ningún evaluador pudo aplicarse: pregunta ciega sin esquema"
+        ),
+    )
+    acierto: bool | None = Field(
+        default=None,
+        description=(
+            "Respuesta correcta Y por el camino correcto. Es lo que cuenta en la "
+            "tabla: acertar por el camino equivocado es fallo"
+        ),
+    )
     respuesta: RespuestaFinanciera | None = None
     traza: Traza | None = None
     cita: VeredictoEvaluador | None = None
@@ -389,7 +407,21 @@ class Metricas(BaseModel):
 
     n_preguntas: int = 0
     aciertos_por_familia: dict[str, float] = Field(default_factory=dict)
+    n_por_familia: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "El denominador de cada familia. Sin él no se puede poner un "
+            "intervalo de confianza al lado de la proporción"
+        ),
+    )
     recall_at_k: dict[int, float] = Field(default_factory=dict)
+    mrr: float = Field(
+        default=0.0,
+        description=(
+            "Media del inverso del puesto del ancla. Distingue dos sistemas "
+            "con el mismo recall@5 pero uno con el pasaje en el puesto 1"
+        ),
+    )
     coste_medio_usd: float | None = None
     latencia_media_s: float = 0.0
     llamadas_por_pregunta: float = 0.0
@@ -398,6 +430,14 @@ class Metricas(BaseModel):
     tasa_intervencion_guardarrail: float = 0.0
     tasa_recuperacion_guardarrail: float = 0.0
     alucinaciones_sobre_hueco: int = 0
+    tasa_abstencion_indebida: float = Field(
+        default=0.0,
+        description=(
+            "Preguntas con dato en el corpus que el sistema respondió con "
+            "fuente='ninguna'. Es el fallo simétrico de la alucinación: un "
+            "sistema que no contesta nunca no alucina, y no vale para nada"
+        ),
+    )
 
 
 class InformeEvaluacion(BaseModel):

@@ -19,6 +19,7 @@ Raúl los fusiona en `golden_set.jsonl`:
 ```python
 from pathlib import Path
 from golden.validador import fusionar_parciales
+
 fusionar_parciales(Path("golden/parciales"), Path("golden/golden_set.jsonl"))
 ```
 

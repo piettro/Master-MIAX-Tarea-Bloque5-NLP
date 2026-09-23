@@ -45,7 +45,9 @@ def sellar() -> dict[str, object]:
     sello: dict[str, object] = {"commit": commit, "huellas": huellas()}
     DIR_BASELINE.mkdir(parents=True, exist_ok=True)
     RUTA_SELLO.write_text(
-        json.dumps(sello, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(sello, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return sello
 

@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang='es'>
+<head>
+<meta charset="utf-8">
+<title>Un agente investigador sobre informes 10-K</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+body { font: 10.5pt/1.5 "Segoe UI", system-ui, sans-serif; color: #17202a; }
+h1 { font-size: 20pt; margin: 0 0 4pt; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; border-bottom: 1px solid #d5dbdb;
+     padding-bottom: 3pt; }
+h3 { font-size: 11.5pt; margin: 12pt 0 4pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 8.8pt; }
+th, td { border: 1px solid #d5dbdb; padding: 3pt 5pt; text-align: left; }
+th { background: #f4f6f7; }
+code { font-family: Consolas, monospace; font-size: 9pt; background: #f4f6f7;
+       padding: 0 2pt; }
+pre { background: #f4f6f7; padding: 6pt; overflow-wrap: normal; font-size: 8.5pt; }
+blockquote { margin: 8pt 0; padding: 4pt 10pt; border-left: 3px solid #aeb6bf;
+             color: #566573; }
+.aviso { color: #a93226; font-style: italic; }
+</style>
+</head>
+<body>
+<h1>Un agente investigador sobre informes 10-K</h1>
+<p><strong>MIAX · Instituto BME · Bloque V — LLMs aplicados a Finanzas</strong>
+Piettro, Alonso y Raúl</p>
+<blockquote>
+<p>Este documento se genera con <code>agente-10k informe --pdf</code>. Todas las tablas
+salen de <code>resultados/</code>, que a su vez sale de ejecutar el repositorio. No hay
+ninguna cifra escrita a mano: si una tabla falta, aquí aparece qué orden la
+genera.</p>
+</blockquote>
+<h2>1. Qué hace el sistema</h2>
+<p>Un agente ReAct responde preguntas sobre los 10-K de seis tecnológicas (NVDA,
+MSFT, AAPL, GOOGL, META, AMZN) en FY2024 y FY2025 — 48 secciones, unos 650.000
+tokens — y cita de dónde sale cada dato. Tiene cuatro herramientas con coste y
+precisión muy distintos:</p>
+<table>
+<thead>
+<tr>
+<th>herramienta</th>
+<th>qué da</th>
+<th>coste</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>list_available</code></td>
+<td>qué emisores y ejercicios hay</td>
+<td>gratis</td>
+</tr>
+<tr>
+<td><code>get_xbrl_fact</code></td>
+<td>el hecho XBRL exacto</td>
+<td>gratis y exacto</td>
+</tr>
+<tr>
+<td><code>search_filings</code></td>
+<td>los fragmentos más parecidos a una consulta</td>
+<td>barato, difuso</td>
+</tr>
+<tr>
+<td><code>read_section</code></td>
+<td>una sección entera, hasta cuarenta páginas</td>
+<td>caro</td>
+</tr>
+</tbody>
+</table>
+<p>La tarea central no es contestar: es <strong>elegir bien</strong>. Una cifra de los estados
+financieros se pide a XBRL, donde es exacta y gratuita; un matiz de los factores
+de riesgo hay que buscarlo en el texto. Un agente que lee la sección 8 entera
+para dar un beneficio por acción ha acertado por el camino equivocado, y en
+nuestra tabla eso cuenta como fallo.</p>
+<p>La respuesta sale siempre como <code>RespuestaFinanciera</code>: prosa, cifra, unidad,
+emisor, ejercicio, fuente, cita literal y <code>chunk_id</code>. Añadimos dos campos —
+<code>concept_xbrl</code> y <code>motivo_sin_dato</code>— que el contrato permite porque llevan valor
+por defecto: el primero deja que el guardarraíl contraste contra el hecho exacto
+en lugar de adivinar qué concepto quiso decir el modelo, y el segundo distingue
+«no está en el corpus» de «no lo he sabido encontrar», que no es lo mismo.</p>
+<h2>2. El golden set</h2>
+<p>Veinte preguntas en <code>golden/golden_set.jsonl</code>, repartidas entre extractivas,
+numéricas y comparativas, con dos huecos deliberados: preguntas cuyo dato <strong>no
+está</strong> en el corpus y cuya respuesta correcta es decirlo.</p>
+<p>La verdad de las extractivas se ancla a una <strong>frase literal</strong> del informe, nunca
+a un <code>chunk_id</code>. El identificador cambia en cuanto se re-trocea el corpus, y
+quien mejore el troceado no puede salir penalizado por haberlo mejorado. El
+recall@k se mide comprobando que esa frase aparece en alguno de los <code>k</code>
+fragmentos recuperados <strong>y que el fragmento es del emisor y el ejercicio que la
+pregunta pide</strong>: sin esa segunda comprobación, una frase que se repite en dos
+informes contaría como acierto en el equivocado.</p>
+<p><code>golden/validador.py</code> comprueba el esquema, las familias, los huecos y las
+escalas antes de que ninguna pregunta entre en una medición.</p>
+<h2>3. Cómo se evalúa</h2>
+<p>Tres evaluadores independientes miran cada respuesta:</p>
+<ul>
+<li><strong>cita</strong> — el texto citado tiene que existir literalmente en el fragmento que
+dice; se compara con espaciado y comillas normalizados, no carácter a carácter;</li>
+<li><strong>cifra</strong> — se acepta con una tolerancia única, 0,5 % o 1 USD, la que sea mayor
+(ADR-008), y se comprueba la unidad y la escala: confundir millones con miles
+es el fallo más frecuente y el más silencioso;</li>
+<li><strong>trayectoria</strong> — qué herramientas usó y en qué orden.</li>
+</ul>
+<p>El <strong>acierto</strong> exige las dos cosas: respuesta correcta <strong>y</strong> camino correcto. La
+tabla lleva además la columna de <em>acierto por el camino equivocado</em>, que es la
+que enseña cuánto de la nota es suerte.</p>
+<p>Las preguntas hueco tienen su propia columna y su propio fallo: <strong>alucinación
+sobre hueco</strong>, dar una cifra donde la respuesta correcta era que el dato no
+está. Y su simétrico, la <strong>abstención indebida</strong>: decir «no hay dato» cuando sí
+lo había. Un sistema que no contesta nunca no alucina y no vale para nada; hacen
+falta las dos columnas para que ninguna de las dos trampas pase desapercibida.</p>
+<h3>Veinte preguntas no son una muestra grande</h3>
+<p>Con veinte preguntas, subir de 12 a 14 aciertos es mover dos preguntas. Por eso
+cada proporción va con su <strong>intervalo de Wilson</strong> —no la normal, que con n
+pequeño se sale de [0, 1] y da anchura cero cuando se acierta todo— y cada
+comparación entre dos sistemas se contrasta con <strong>McNemar exacto</strong>: pareado,
+porque los dos sistemas responden las mismas preguntas, y exacto, porque la
+aproximación de chi-cuadrado pide unos veinticinco pares discordantes y aquí hay
+cuatro o cinco.</p>
+<h2>4. El retrieval, paso a paso</h2>
+<p>Cada fila es una configuración; el runner es el mismo. Añadir una fila a esta
+tabla es añadir una tupla en <code>retrieval/fabrica.py</code>, nunca escribir código.</p>
+<table>
+<thead>
+<tr>
+<th>configuración</th>
+<th>recall@1</th>
+<th>recall@3</th>
+<th>recall@5</th>
+<th>recall@10</th>
+<th>MRR</th>
+<th>latencia media (s)</th>
+<th>coste medio ($)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>denso (base)</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.25</td>
+<td>0.25</td>
+<td>0.06</td>
+<td>746.5 ms</td>
+<td>0.00000</td>
+</tr>
+<tr>
+<td>+ filtro metadatos</td>
+<td>0.25</td>
+<td>0.50</td>
+<td>0.67</td>
+<td>0.83</td>
+<td>0.44</td>
+<td>248.7 ms</td>
+<td>0.00000</td>
+</tr>
+<tr>
+<td>+ BM25 (híbrido RRF)</td>
+<td>0.25</td>
+<td>0.50</td>
+<td>0.58</td>
+<td>0.67</td>
+<td>0.40</td>
+<td>251.1 ms</td>
+<td>0.00000</td>
+</tr>
+<tr>
+<td>+ reescritura de consulta</td>
+<td>0.67</td>
+<td>0.67</td>
+<td>0.75</td>
+<td>0.92</td>
+<td>0.71</td>
+<td>4898.8 ms</td>
+<td>0.00192</td>
+</tr>
+<tr>
+<td>todo</td>
+<td>0.58</td>
+<td>0.83</td>
+<td><strong>0.92</strong></td>
+<td><strong>1.00</strong></td>
+<td>0.74</td>
+<td>4903.1 ms</td>
+<td>0.00192</td>
+</tr>
+<tr>
+<td>+ reordenación (cross-encoder)</td>
+<td>0.17</td>
+<td>0.25</td>
+<td>0.58</td>
+<td>0.75</td>
+<td>0.32</td>
+<td>709.3 ms</td>
+<td>0.00000</td>
+</tr>
+<tr>
+<td>+ reescritura + reordenación</td>
+<td><strong>0.83</strong></td>
+<td>0.83</td>
+<td>0.83</td>
+<td>0.92</td>
+<td>0.85</td>
+<td>5201.8 ms</td>
+<td>0.00192</td>
+</tr>
+<tr>
+<td>todo + reordenación</td>
+<td><strong>0.83</strong></td>
+<td>0.83</td>
+<td>0.83</td>
+<td>0.92</td>
+<td>0.85</td>
+<td>5182.6 ms</td>
+<td>0.00192</td>
+</tr>
+<tr>
+<td>+ reescritura + reordenación (RRF)</td>
+<td>0.67</td>
+<td>0.75</td>
+<td><strong>0.92</strong></td>
+<td>0.92</td>
+<td>0.74</td>
+<td>5186.1 ms</td>
+<td>0.00192</td>
+</tr>
+<tr>
+<td>todo + reordenación (RRF)</td>
+<td>0.67</td>
+<td><strong>0.92</strong></td>
+<td><strong>0.92</strong></td>
+<td>0.92</td>
+<td>0.78</td>
+<td>5176.3 ms</td>
+<td>0.00192</td>
+</tr>
+</tbody>
+</table>
+<p>Y el contraste de cada fila contra la de partida:</p>
+<p>Contraste contra «denso (base)» sobre recall@5, 12 preguntas con ancla. McNemar exacto, pareado.</p>
+<table>
+<thead>
+<tr>
+<th>configuración</th>
+<th>recall@5</th>
+<th>arregla</th>
+<th>rompe</th>
+<th>p</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+ filtro metadatos</td>
+<td>0.67</td>
+<td>5</td>
+<td>0</td>
+<td>0.062 (n. s.)</td>
+</tr>
+<tr>
+<td>+ BM25 (híbrido RRF)</td>
+<td>0.58</td>
+<td>4</td>
+<td>0</td>
+<td>0.125 (n. s.)</td>
+</tr>
+<tr>
+<td>+ reescritura de consulta</td>
+<td>0.75</td>
+<td>6</td>
+<td>0</td>
+<td>0.031</td>
+</tr>
+<tr>
+<td>todo</td>
+<td>0.92</td>
+<td>8</td>
+<td>0</td>
+<td>0.008</td>
+</tr>
+<tr>
+<td>+ reordenación (cross-encoder)</td>
+<td>0.58</td>
+<td>4</td>
+<td>0</td>
+<td>0.125 (n. s.)</td>
+</tr>
+<tr>
+<td>+ reescritura + reordenación</td>
+<td>0.83</td>
+<td>7</td>
+<td>0</td>
+<td>0.016</td>
+</tr>
+<tr>
+<td>todo + reordenación</td>
+<td>0.83</td>
+<td>7</td>
+<td>0</td>
+<td>0.016</td>
+</tr>
+<tr>
+<td>+ reescritura + reordenación (RRF)</td>
+<td>0.92</td>
+<td>8</td>
+<td>0</td>
+<td>0.008</td>
+</tr>
+<tr>
+<td>todo + reordenación (RRF)</td>
+<td>0.92</td>
+<td>8</td>
+<td>0</td>
+<td>0.008</td>
+</tr>
+</tbody>
+</table>
+<p>Lectura:</p>
+<ul>
+<li><strong>El filtro de metadatos es lo primero y casi lo más barato.</strong> Filtrar <em>antes</em>
+de buscar, en vez de filtrar el orden que devuelve el índice, sube el recall
+sin coste ni latencia. Aun así no aguanta el contraste por sí solo: con doce
+preguntas con ancla, cinco aciertos nuevos y ningún fallo nuevo se quedan justo
+en el borde.</li>
+<li><strong>La reescritura de la consulta es la mejora grande, y cuesta dinero.</strong> La
+pregunta llega en español y en lenguaje de persona; el corpus está en inglés y
+en lenguaje de abogado. Traducirla con el modelo antes de buscar es lo que
+parte la tabla en dos, y es la primera fila cuyo p-valor baja del 5 %. Añade
+una llamada al modelo y unos cinco segundos por consulta: está en la columna de
+coste y en la de latencia, no en una nota al pie.</li>
+<li><strong>El cross-encoder solo vale después de traducir.</strong> Reordenar los candidatos
+con <code>ms-marco-MiniLM-L6-v2</code> sobre la consulta en español <em>empeora</em> —el modelo
+está entrenado en inglés—; sobre la consulta ya traducida sube el recall@1 y el
+MRR de forma clara. Es el mejor ejemplo de la práctica de que el orden de las
+mejoras importa tanto como las mejoras.</li>
+<li><strong>Reordenar puro sube arriba y puede hundir abajo.</strong> El cross-encoder no
+recupera, solo reordena: cuando se equivoca, tira fuera del top-5 un pasaje que
+el recuperador ya tenía. Fusionar su orden con el del recuperador por RRF —el
+mismo RRF del híbrido— conserva el recall profundo y sigue ganando arriba. Para
+un agente que lee cinco fragmentos, la fila de RRF es la que hay que llevar.</li>
+<li><strong>BM25 no aportó.</strong> El híbrido denso + léxico con RRF no mejora al denso con
+filtro en nuestro golden set. Es un arreglo razonable que no movió la métrica,
+y eso también es un resultado.</li>
+</ul>
+<p>La tabla es <strong>reproducible</strong>: las reescrituras se cachean en disco con el modelo
+en la clave, porque el modelo no devuelve la misma reescritura ni con temperatura
+0, y sin esa caché dos ejecuciones seguidas daban recalls distintos. Los aciertos
+de caché siguen sumando su coste y su latencia originales: si no, la segunda
+ejecución diría que reescribir es gratis.</p>
+<h2>5. Baseline contra sistema final</h2>
+<p>El baseline es el agente del día 10 —<code>miax_s2.baseline()</code>— con <strong>el mismo
+modelo</strong> que el sistema final: la tabla compara dos sistemas, no dos modelos. Se
+ejecutó y se <strong>congeló</strong> antes de tocar nada (<code>resultados/baseline/SELLO.json</code>,
+huellas SHA-256 de cada fichero); regenerarlo exige borrar el sello a mano y
+dejar constancia en <code>docs/decisiones.md</code>.</p>
+<p class="aviso">PENDIENTE: falta docs\informe\tabla_principal.md. Se genera ejecutando el repositorio.</p>
+<p class="aviso">PENDIENTE: falta docs\informe\significancia.md. Se genera ejecutando el repositorio.</p>
+<h3>El baseline, en detalle</h3>
+<h1>Resultados · baseline</h1>
+<ul>
+<li>fecha: 2026-09-23 19:35 UTC</li>
+<li>modelo: openrouter:google/gemini-3.8-flash</li>
+<li>commit: 6800450</li>
+<li>preguntas: 20 (golden\golden_set.jsonl)</li>
+<li>acierto total: 11/20, IC 95 % [34%, 74%]</li>
+</ul>
+<h2>Resumen</h2>
+<table>
+<thead>
+<tr>
+<th>sistema</th>
+<th>extractiva</th>
+<th>numérica</th>
+<th>comparativa</th>
+<th>hueco</th>
+<th>total</th>
+<th>recall@5</th>
+<th>coste medio</th>
+<th>latencia media</th>
+<th>tool calls/pregunta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>baseline</td>
+<td>83%</td>
+<td>75%</td>
+<td>0%</td>
+<td>33%</td>
+<td>55%</td>
+<td>25%</td>
+<td>1.234 ¢</td>
+<td>17.7 s</td>
+<td>3.4</td>
+</tr>
+</tbody>
+</table>
+<h2>Por familia</h2>
+<table>
+<thead>
+<tr>
+<th>familia</th>
+<th>preguntas</th>
+<th>aciertos</th>
+<th>qué falló</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>numerica</td>
+<td>8</td>
+<td>6/8</td>
+<td>fuente_no_ninguna (2), cita_no_literal (1), alucinacion_sobre_hueco (1)</td>
+</tr>
+<tr>
+<td>hueco</td>
+<td>3</td>
+<td>1/3</td>
+<td>fuente_no_ninguna (2), cita_no_literal (1), alucinacion_sobre_hueco (1)</td>
+</tr>
+<tr>
+<td>comparativa</td>
+<td>6</td>
+<td>0/6</td>
+<td>cifra_no_coincide (5), cita_no_literal (1), no_respalda_ancla (1)</td>
+</tr>
+<tr>
+<td>extractiva</td>
+<td>6</td>
+<td>5/6</td>
+<td>error de ejecución (1)</td>
+</tr>
+</tbody>
+</table>
+<h2>Trayectoria</h2>
+<table>
+<thead>
+<tr>
+<th>trayectoria</th>
+<th>preguntas</th>
+<th>proporción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>camino correcto</td>
+<td>19</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>camino equivocado, acierta</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>camino equivocado, falla</td>
+<td>0</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>no aplica (sin herramienta_esperada)</td>
+<td>1</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2>Guardarraíl</h2>
+<table>
+<thead>
+<tr>
+<th>guardarraíl</th>
+<th>valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>preguntas con intervención del guardarraíl</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>intervenciones totales</td>
+<td>0</td>
+</tr>
+<tr>
+<td>recuperadas tras intervenir (respuesta correcta)</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>preguntas que agotaron el límite de llamadas</td>
+<td>0</td>
+</tr>
+<tr>
+<td>alucinaciones sobre hueco</td>
+<td>1</td>
+</tr>
+<tr>
+<td>abstenciones indebidas (dijo «no hay dato» y sí lo había)</td>
+<td>0%</td>
+</tr>
+</tbody>
+</table>
+<h2>Retrieval</h2>
+<table>
+<thead>
+<tr>
+<th>recall@1</th>
+<th>recall@3</th>
+<th>recall@5</th>
+<th>recall@10</th>
+<th>MRR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0%</td>
+<td>0%</td>
+<td>25%</td>
+<td>25%</td>
+<td>0.06</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>pregunta</th>
+<th>puesto del ancla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>g-r-005</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-006</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-007</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-008</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-009</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-010</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-011</td>
+<td>5</td>
+</tr>
+<tr>
+<td>g-r-012</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-017</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-018</td>
+<td>&gt; 10</td>
+</tr>
+<tr>
+<td>g-r-019</td>
+<td>4</td>
+</tr>
+<tr>
+<td>g-r-020</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h2>Por pregunta</h2>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>familia</th>
+<th>acierto</th>
+<th>herramientas</th>
+<th>qué falló</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>g-r-001</td>
+<td>numerica</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; search_filings &gt; search_filings &gt; get_xbrl_fact &gt; get_xbrl_fact</td>
+<td>cita_no_literal (1), alucinacion_sobre_hueco (1), fuente_no_ninguna (1)</td>
+</tr>
+<tr>
+<td>g-r-002</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-003</td>
+<td>numerica</td>
+<td>sí</td>
+<td>get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-004</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-005</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-006</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-007</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-008</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-009</td>
+<td>extractiva</td>
+<td>error</td>
+<td>—</td>
+<td>error de ejecución (1)</td>
+</tr>
+<tr>
+<td>g-r-010</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-011</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-012</td>
+<td>extractiva</td>
+<td>sí</td>
+<td>list_available &gt; search_filings</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-013</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; get_xbrl_fact &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-014</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-015</td>
+<td>numerica</td>
+<td>sí</td>
+<td>list_available &gt; get_xbrl_fact</td>
+<td></td>
+</tr>
+<tr>
+<td>g-r-016</td>
+<td>numerica</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; search_filings &gt; search_filings</td>
+<td>fuente_no_ninguna (1)</td>
+</tr>
+<tr>
+<td>g-r-017</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cita_no_literal (1)</td>
+</tr>
+<tr>
+<td>g-r-018</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>no_respalda_ancla (1), cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-019</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+<tr>
+<td>g-r-020</td>
+<td>comparativa</td>
+<td>no</td>
+<td>list_available &gt; get_xbrl_fact &gt; get_xbrl_fact &gt; search_filings &gt; search_filings</td>
+<td>cifra_no_coincide (1)</td>
+</tr>
+</tbody>
+</table>
+<p>Tres cosas que se leen ahí y que orientan el trabajo de mejora:</p>
+<ul>
+<li><strong>Enruta bien y contesta mal.</strong> La trayectoria es correcta en todas las
+preguntas en las que aplica: el agente va a XBRL cuando la pregunta es
+numérica y al texto cuando es un matiz. El problema no es la elección de
+herramienta.</li>
+<li><strong>Las comparativas son el agujero.</strong> Ninguna sale. El patrón es siempre el
+mismo: consulta un ejercicio, consulta el otro y falla al combinarlos o
+arrastra la cifra de uno de los dos. Es lo que hay que atacar primero.</li>
+<li><strong>Hay una alucinación sobre hueco.</strong> Con el dato ausente del corpus, el
+sistema dio una cifra igualmente. Es el fallo más caro de los que mide la
+tabla y es exactamente lo que el guardarraíl tiene que parar.</li>
+</ul>
+<p>Una pregunta murió con un error del proveedor (<code>BadRequestResponseError</code>) y
+cuenta como fallo: la ejecución continúa y lo deja escrito en vez de
+interrumpirse, que es la regla del ejecutor. Está en la columna «qué falló» como
+error de ejecución.</p>
+<h2>6. Las diez preguntas ciegas</h2>
+<p class="aviso">PENDIENTE: falta docs\informe\delta_ciegas.md. Se genera ejecutando el repositorio.</p>
+<p>Si el delta baja, la parte de la mejora que era memoria del conjunto con el que
+iteramos se ve aquí. Es un hallazgo, no un suspenso: lo que no se puede hacer es
+no medirlo.</p>
+<h2>7. Reproducir esto</h2>
+<pre><code class="language-bash">pip install -e &quot;.[dev,informe]&quot;
+# descomprimir corpus_miax_2026.zip e indice_faiss.zip en data/corpus/
+agente-10k diagnostico       # qué hay y qué falta
+agente-10k validar-golden golden/golden_set.jsonl
+agente-10k ablacion          # tabla de retrieval + contraste
+agente-10k baseline          # ejecuta y CONGELA el baseline
+agente-10k evaluar golden/golden_set.jsonl --etiqueta final
+agente-10k informe --pdf     # este documento
+</code></pre>
+<p>Ninguna clave de API está en el repositorio: se leen del entorno o de un <code>.env</code>
+que no se versiona, y <code>.env.example</code> dice cuáles hacen falta.</p>
+
+</body>
+</html>

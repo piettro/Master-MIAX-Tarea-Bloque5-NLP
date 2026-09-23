@@ -273,6 +273,169 @@ trampas.
 
 ---
 
+## ADR-013 · El tokenizador de BM25 conserva números y guiones
+
+**Contexto.** BM25 se añade porque el denso falla justo donde importa en
+finanzas: un ticker, una cifra o un nombre propio no tienen vecindario
+semántico. Pero esa ventaja depende del tokenizador. Un `str.split()` o un
+tokenizador que parta por todo signo convierte «60,922» en «60» y «922», y
+«AI-related» en «ai» y «related» —y entonces BM25 deja de encontrar exactamente
+lo que se le añadió a encontrar—.
+
+**Opciones.** (a) El tokenizador por defecto de la librería. (b) Uno propio que
+conserve como una sola unidad los números con separador de millar y las palabras
+con guion o punto interno.
+
+**Decisión.** (b). `lexico.tokenizar` usa la regex
+`[a-z0-9]+(?:[.,-][a-z0-9]+)*` sobre el texto en minúsculas: mantiene «60,922»,
+«ai-related» y «u.s.» enteros, y descarta el «$», los espacios y el punto final
+de frase. La consulta y el corpus se tokenizan con la MISMA función; si se
+separaran, «60,922» en la pregunta no casaría con «60,922» en el fragmento.
+
+**Consecuencia.** BM25 aporta lo que tenía que aportar. Un test fija los dos
+casos (`test_no_parte_los_numeros_por_el_separador_de_millar`,
+`test_conserva_las_palabras_con_guion`) para que un cambio futuro del tokenizador
+que los rompa salte en la suite.
+
+---
+
+## ADR-014 · Fusión por RRF, no por suma de puntuaciones
+
+**Contexto.** El híbrido combina denso y BM25. La coseno del denso vive en
+[-1, 1] y la puntuación BM25 no tiene cota ni escala fija. Sumarlas o
+promediarlas es comparar magnitudes no comparables: el resultado lo domina
+siempre el recuperador de números más grandes, no el de más razón.
+
+**Opciones.** (a) Suma o media ponderada de puntuaciones. (b) Reciprocal Rank
+Fusion, que ignora las puntuaciones y usa solo el PUESTO de cada documento.
+
+**Decisión.** (b). `RRF(d) = Σ peso · 1/(k + puesto(d))`, con `puesto` desde 1.
+El `k` de RRF va en `Settings.rrf_k` (60 por defecto, el del paper) porque es un
+parámetro de la ablación, no una constante. El desempate es por `chunk_id`, para
+que la tabla sea reproducible entre ejecuciones.
+
+**Consecuencia.** La fusión es justa: un documento que un recuperador ve tarde y
+el otro no ve puede superar a uno mediocre por consenso de puestos. `fusionar_rrf`
+es una función pura sobre listas de `chunk_id` y se prueba sin modelo, sin índice
+y sin red.
+
+---
+
+## ADR-015 · La fila base de la ablación no recibe los filtros
+
+**Contexto.** El `RecuperadorDenso` que entregamos filtra DURANTE su barrido:
+recorre todo el índice en orden de puntuación y se queda con los `k` primeros que
+pasen los metadatos. Eso significa que si al medir la fila base le pasáramos los
+filtros de la pregunta, la fila «+ filtro metadatos» saldría idéntica y la mejora
+parecería nula —cuando en realidad el filtro previo sí ayuda a un agente que no
+sabe de antemano de qué emisor es la pregunta—.
+
+**Opciones.** (a) Pasar siempre los filtros y arriesgar una tabla en la que la
+mejora del filtro es cero por construcción. (b) Que la fila base busque SIN
+metadatos —como el baseline del profesor, que filtra después— y solo las filas
+con `filtro_metadatos=True` los apliquen.
+
+**Decisión.** (b). En `medicion.medir_configuracion`, los filtros se pasan solo
+cuando `cfg.filtro_metadatos` está activo. La fila base mide el recall del denso
+sobre el corpus entero; la fila del filtro mide lo que se gana al restringir el
+espacio antes de buscar. Es el punto de ADR-009 llevado a la medición.
+
+**Consecuencia.** La tabla de ablación mide de verdad lo que separa cada fila de
+la anterior, y no un artefacto de que el denso ya filtraba. El decorador
+`ConFiltroMetadatos`, además, sobre-muestrea al tamaño del corpus antes de
+recortar: así el resultado es correcto aunque el recuperador envuelto ignore los
+filtros, a cambio de pedir de más sobre 1.749 fragmentos, que es gratis.
+
+---
+
+## ADR-016 · La reordenación va por dentro de la reescritura
+
+**Contexto.** El cross-encoder `ms-marco-MiniLM-L6-v2` está entrenado en inglés,
+sobre MS MARCO. Nuestras preguntas llegan en español. Medido sobre las doce
+preguntas con ancla, reordenar la consulta en español EMPEORA el recall; sobre la
+consulta ya traducida por la reescritura, lo mejora de forma clara.
+
+**Opciones.** (a) Envolver la reescritura por dentro de la reordenación, que es
+el orden natural de leer «primero recupero, luego reordeno». (b) Envolver la
+reordenación por dentro de la reescritura, de modo que el cross-encoder vea la
+consulta ya en inglés.
+
+**Decisión.** (b). En `fabrica.construir_recuperador`, la reordenación se aplica
+antes de envolver con `ConReescritura`, así que en tiempo de ejecución recibe la
+consulta traducida.
+
+**Consecuencia.** La fila «+ reordenación» sola de la tabla es mala a propósito y
+se queda: enseña que el orden de las mejoras importa tanto como las mejoras. Si
+algún día las preguntas llegan en inglés, esta decisión deja de importar.
+
+---
+
+## ADR-017 · Reordenar puro o fusionar con RRF
+
+**Contexto.** El cross-encoder no recupera: solo reordena lo que le dan. Cuando
+se equivoca, hunde fuera del top-5 un pasaje que el recuperador ya tenía bien
+colocado. En la tabla se ve: el modo puro da el mejor recall@1 y el mejor MRR, y
+pierde recall@10 contra no reordenar.
+
+**Opciones.** (a) Sustituir el orden del recuperador por el del cross-encoder.
+(b) Fusionar los dos órdenes con RRF, el mismo de ADR-014.
+
+**Decisión.** Las dos, como filas distintas de la ablación
+(`Settings.fusion_reordenacion`). Para el sistema final se lleva la fusión: el
+agente lee cinco fragmentos, y ahí RRF iguala el mejor recall@5 sin perder
+profundidad.
+
+**Consecuencia.** Una fila más en la tabla y un parámetro más en la
+configuración. A cambio, la decisión se toma con números y no con intuición, que
+es la pregunta que el enunciado dice que se hará a todos los grupos.
+
+---
+
+## ADR-018 · Las reescrituras se cachean en disco
+
+**Contexto.** La tabla de ablación no salía dos veces igual. El modelo no
+devuelve la misma reescritura ni con `temperature=0`, y con doce preguntas con
+ancla una reescritura distinta mueve el recall ocho puntos. Una tabla que cambia
+sola no se puede defender.
+
+**Opciones.** (a) Dejarlo y reportar la media de varias ejecuciones —caro y
+lento—. (b) Cachear las reescrituras en disco, con el modelo en la clave.
+
+**Decisión.** (b), en `.cache/agente_10k/reescrituras.json`. Cada entrada guarda
+la reescritura y además los tokens, el coste y la latencia de la llamada
+original. Los aciertos de caché vuelven a sumar ese coste y esa latencia: la
+tabla compara TÉCNICAS, y si los aciertos contaran cero, la fila de la
+reescritura saldría gratis e instantánea, que es lo contrario de lo que hay que
+enseñar.
+
+**Consecuencia.** Dos ejecuciones seguidas dan la misma tabla. Se arrastran
+reescrituras viejas, que se tiran borrando el fichero; cambiar de modelo no las
+reutiliza porque va en la clave.
+
+---
+
+## ADR-019 · Cada proporción con su intervalo, cada comparación con su contraste
+
+**Contexto.** El golden set tiene veinte preguntas y solo doce con ancla. Pasar
+de 12 a 14 aciertos son dos preguntas, y una tabla de porcentajes a pelo invita
+a leer eso como una mejora.
+
+**Opciones.** (a) Reportar solo las proporciones. (b) Añadir intervalo de
+confianza y un contraste entre sistemas.
+
+**Decisión.** (b), en `evaluacion/estadistica.py`. Intervalo de **Wilson**, no la
+normal: con n pequeño la normal se sale de [0, 1] y da anchura cero cuando se
+acierta todo. Contraste de **McNemar exacto**, no chi-cuadrado: la aproximación
+pide unos veinticinco pares discordantes y aquí hay cuatro o cinco. Pareado,
+porque los dos sistemas responden las mismas preguntas y comparar dos
+proporciones independientes tiraría esa información.
+
+**Consecuencia.** El informe puede decir qué mejoras aguantan un contraste y
+cuáles no, que con estos tamaños es casi siempre la respuesta honesta. `Metricas`
+guarda `n_por_familia` porque un intervalo necesita denominador.
+
+---
+
 ## Pendiente de decidir
 
 - **Troceado propio.** El corpus viene troceado a ~500 tokens con 80 de solape.

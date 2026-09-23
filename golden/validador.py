@@ -202,8 +202,11 @@ def _validar_numerica(p: Pregunta, corpus: object) -> list[str]:
         )
     if p.cifra_esperada is not None and not p.unidad:
         problemas.append(f"{p.id}: cifra_esperada sin unidad")
+    # Solo para magnitudes en USD: un BPA de 2,94 USD/accion o un porcentaje
+    # son legitimos por debajo del millon.
     fuera_de_escala = (
         p.cifra_esperada is not None
+        and (p.unidad or "").upper() == "USD"
         and 0 < abs(p.cifra_esperada) < MINIMO_UNIDADES_BASE
     )
     if fuera_de_escala:
