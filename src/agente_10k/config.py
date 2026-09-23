@@ -103,6 +103,14 @@ class Settings(BaseSettings):
             "partida"
         ),
     )
+    fusion_reordenacion: bool = Field(
+        default=False,
+        description=(
+            "Mezclar el orden del cross-encoder con el del recuperador por RRF "
+            "en vez de sustituirlo. Protege el recall profundo a costa de algo "
+            "de precisión arriba"
+        ),
+    )
     modelo_reordenacion: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
     profundidad_reordenacion: int = Field(default=20, ge=2)
     rrf_k: int = Field(default=60, ge=1)
@@ -199,6 +207,7 @@ class Settings(BaseSettings):
             "filtro_metadatos": self.filtro_metadatos,
             "reescritura_consulta": self.reescritura_consulta,
             "reordenacion": self.reordenacion,
+            "fusion_reordenacion": self.fusion_reordenacion,
             "rrf_k": self.rrf_k,
             "k_por_defecto": self.k_por_defecto,
         }

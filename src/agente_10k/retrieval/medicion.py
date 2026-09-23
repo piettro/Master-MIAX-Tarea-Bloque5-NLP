@@ -40,8 +40,11 @@ from agente_10k.config import Settings
 from agente_10k.corpus import Corpus
 from agente_10k.dominio.modelos import Filtros, Fragmento, Pregunta, UsoTokens
 from agente_10k.dominio.protocolos import ProveedorLLM, Recuperador
-from agente_10k.evaluacion.metricas import acierta_en_k, recall_at_k
+from agente_10k.evaluacion.estadistica import mcnemar
+from agente_10k.evaluacion.metricas import mrr, posicion_del_ancla, recall_at_k
 from agente_10k.retrieval.fabrica import CONFIGURACIONES_ABLACION, construir_recuperador
+
+MINIMO_PARA_COMPARAR = 2  # con una sola configuración no hay contraste
 
 KS_POR_DEFECTO: tuple[int, ...] = (1, 3, 5, 10)
 """Los `k` que reporta la tabla. `recall@1` dice si el mejor fragmento ya vale;
@@ -63,9 +66,19 @@ class FilaAblacion:
     coste_medio_usd: float
     n_preguntas: int
     pendiente: str | None = None  # motivo si la fila no se pudo medir
-    # Detalle por pregunta: id -> ¿acertó en el mayor k? Sirve para contar en la
-    # defensa QUÉ preguntas arregló o rompió cada mejora, no solo la media.
-    aciertos_por_pregunta: dict[str, bool] = field(default_factory=dict)
+    # Detalle por pregunta: id -> en qué puesto salió su ancla, o None si no
+    # salió. Guardar el puesto y no un sí/no permite sacar después cualquier k,
+    # el MRR, y contar en la defensa qué preguntas movió cada mejora.
+    puestos: dict[str, int | None] = field(default_factory=dict)
+
+    @property
+    def mrr(self) -> float:
+        """Media del inverso del puesto del ancla."""
+        return mrr(self.puestos)
+
+    def aciertos_en(self, k: int) -> dict[str, bool]:
+        """Qué preguntas tuvieron su ancla en el top-`k`."""
+        return {pid: bool(p and p <= k) for pid, p in self.puestos.items()}
 
 
 def _filtros_de(pregunta: Pregunta) -> Filtros:
@@ -138,7 +151,7 @@ def medir_configuracion(
 
     utiles = _preguntas_con_ancla(preguntas)
     recuperaciones: list[tuple[Sequence[Fragmento], str]] = []
-    aciertos: dict[str, bool] = {}
+    puestos: dict[str, int | None] = {}
     tiempo_total = 0.0
 
     for pregunta in utiles:
@@ -153,13 +166,15 @@ def medir_configuracion(
 
         ancla = pregunta.ancla_texto or ""
         recuperaciones.append((encontrados, ancla))
-        # El detalle por pregunta usa el mayor k: ¿llegó el ancla a estar entre
-        # los que el agente vería? Es la vista que permite decir "esta mejora
-        # arregló g-a-003 pero rompió g-a-007".
-        aciertos[pregunta.id] = acierta_en_k(encontrados, ancla, k_max)
+        # El puesto, no un sí/no: es lo que permite decir "esta mejora arregló
+        # g-a-003 pero rompió g-a-007" y de paso sacar el MRR.
+        puestos[pregunta.id] = posicion_del_ancla(pregunta, encontrados)
 
     recall = recall_at_k(recuperaciones, ks)
     n = len(utiles)
+    # Lo que la caché de reescrituras se ahorró vuelve a la cuenta: la tabla
+    # compara técnicas, y la primera vez que se reescribe una consulta se paga.
+    tiempo_total += _latencia_ahorrada(recuperador)
     latencia_media = tiempo_total / n if n else 0.0
 
     # El coste solo lo añade la reescritura, y solo ella lo sabe contar. Se le
@@ -174,8 +189,14 @@ def medir_configuracion(
         latencia_media_s=latencia_media,
         coste_medio_usd=coste_medio,
         n_preguntas=n,
-        aciertos_por_pregunta=aciertos,
+        puestos=puestos,
     )
+
+
+def _latencia_ahorrada(recuperador: object) -> float:
+    """Los segundos de reescritura que la caché no volvió a gastar."""
+    ahorrada = getattr(recuperador, "latencia_ahorrada", None)
+    return float(ahorrada()) if ahorrada is not None else 0.0
 
 
 def _coste_reescritura(recuperador: object) -> float | None:
@@ -224,7 +245,7 @@ def _cabeceras(ks: Sequence[int]) -> list[str]:
     return (
         ["configuración"]
         + [f"recall@{k}" for k in ks]
-        + ["latencia media (s)", "coste medio ($)"]
+        + ["MRR", "latencia media (s)", "coste medio ($)"]
     )
 
 
@@ -258,6 +279,7 @@ def tabla_markdown(
             if valor >= mejor[k] > 0.0:
                 texto = f"**{texto}**"  # el mejor de la columna, remarcado
             celdas.append(texto)
+        celdas.append(f"{fila.mrr:.2f}")
         celdas.append(f"{fila.latencia_media_s * 1000:.1f} ms")
         celdas.append(f"{fila.coste_medio_usd:.5f}")
         lineas.append("| " + " | ".join(celdas) + " |")
@@ -291,6 +313,7 @@ def escribir_ablacion(
                 [fila.nombre]
                 + [f"{fila.recall.get(k, 0.0):.4f}" for k in ks]
                 + [
+                    f"{fila.mrr:.4f}",
                     f"{fila.latencia_media_s:.6f}",
                     f"{fila.coste_medio_usd:.6f}",
                     fila.n_preguntas,
@@ -298,10 +321,10 @@ def escribir_ablacion(
                 ]
             )
 
-    # Detalle: una fila por pregunta, una columna por configuración, con un 1/0
-    # de si el ancla estuvo en el top-k. Es la vista que enseña qué rompió cada
-    # mejora, no solo cuánto subió la media.
-    ids = sorted({pid for fila in filas for pid in fila.aciertos_por_pregunta})
+    # Detalle: una fila por pregunta, una columna por configuración, con el
+    # puesto del ancla. Es la vista que enseña qué rompió cada mejora, no solo
+    # cuánto subió la media.
+    ids = sorted({pid for fila in filas for pid in fila.puestos})
     with ruta_detalle.open("w", newline="", encoding="utf-8") as f:
         escritor = csv.writer(f)
         escritor.writerow(["pregunta_id", *(fila.nombre for fila in filas)])
@@ -311,7 +334,43 @@ def escribir_ablacion(
                 if fila.pendiente:
                     fila_pid.append("")  # no se midió: celda en blanco, no un 0
                 else:
-                    fila_pid.append(int(fila.aciertos_por_pregunta.get(pid, False)))
+                    puesto = fila.puestos.get(pid)
+                    fila_pid.append("" if puesto is None else puesto)
             escritor.writerow(fila_pid)
 
-    return [ruta_md, ruta_csv, ruta_detalle]
+    ruta_significancia = dir_salida / "significancia.md"
+    ruta_significancia.write_text(tabla_significancia(filas), encoding="utf-8")
+    return [ruta_md, ruta_csv, ruta_detalle, ruta_significancia]
+
+
+def tabla_significancia(filas: Sequence[FilaAblacion], k: int = 5) -> str:
+    """Cada configuración contra la primera, con McNemar exacto sobre recall@k.
+
+    Con doce preguntas con ancla, subir de 0,67 a 0,83 son dos preguntas. Esta
+    tabla dice cuáles de las mejoras de la de arriba aguantan un contraste y
+    cuáles son ruido; casi ninguna lo aguanta, y decirlo es parte del trabajo.
+    """
+    medibles = [f for f in filas if f.pendiente is None and f.puestos]
+    if len(medibles) < MINIMO_PARA_COMPARAR:
+        return "No hay dos configuraciones medidas que comparar.\n"
+    base, *resto = medibles
+    aciertos_base = base.aciertos_en(k)
+    lineas = [
+        f"Contraste contra «{base.nombre}» sobre recall@{k}, "
+        f"{len(aciertos_base)} preguntas con ancla. McNemar exacto, pareado.",
+        "",
+        f"| configuración | recall@{k} | arregla | rompe | p |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for fila in resto:
+        aciertos = fila.aciertos_en(k)
+        comunes = sorted(set(aciertos_base) & set(aciertos))
+        prueba = mcnemar(
+            [aciertos[i] for i in comunes], [aciertos_base[i] for i in comunes]
+        )
+        marca = "" if prueba.significativa() else " (n. s.)"
+        lineas.append(
+            f"| {fila.nombre} | {fila.recall.get(k, 0.0):.2f} | {prueba.solo_a} | "
+            f"{prueba.solo_b} | {prueba.p_valor:.3f}{marca} |"
+        )
+    return "\n".join(lineas) + "\n"

@@ -1,0 +1,13 @@
+pregunta_id,denso (base),+ filtro metadatos,+ BM25 (híbrido RRF),+ reescritura de consulta,todo,+ reordenación (cross-encoder),+ reescritura + reordenación,todo + reordenación,+ reescritura + reordenación (RRF),todo + reordenación (RRF)
+g-r-005,,6,,5,2,4,1,1,2,2
+g-r-006,,2,2,1,1,2,1,1,1,1
+g-r-007,,1,1,1,1,1,1,1,1,1
+g-r-008,,,,6,2,,7,7,5,3
+g-r-009,,,,,10,,,,,
+g-r-010,,2,,1,1,,1,1,1,1
+g-r-011,5,1,1,1,1,1,1,1,1,1
+g-r-012,,5,3,1,1,4,1,1,1,1
+g-r-017,,6,6,8,4,8,1,1,5,1
+g-r-018,,5,4,1,1,6,1,1,1,1
+g-r-019,4,2,2,1,1,4,1,1,1,1
+g-r-020,4,1,1,1,2,4,1,1,1,2

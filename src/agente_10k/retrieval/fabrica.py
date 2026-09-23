@@ -69,12 +69,21 @@ def construir_recuperador(
         # Va por dentro de la reescritura: el cross-encoder puntúa con la
         # consulta ya traducida, que es donde gana.
         base = ConReordenacion(
-            base, cfg.modelo_reordenacion, cfg.profundidad_reordenacion
+            base,
+            cfg.modelo_reordenacion,
+            cfg.profundidad_reordenacion,
+            fusionar=cfg.fusion_reordenacion,
         )
     if cfg.reescritura_consulta:
         from agente_10k.retrieval.reescritura import ConReescritura
 
-        base = ConReescritura(base, proveedor)  # type: ignore[arg-type]
+        ruta_cache = (cfg.dir_cache / "reescrituras.json") if cfg.cache_activa else None
+        base = ConReescritura(
+            base,
+            proveedor,  # type: ignore[arg-type]
+            cachear=cfg.cache_activa,
+            ruta_cache=ruta_cache,
+        )
     return base
 
 
@@ -143,6 +152,35 @@ CONFIGURACIONES_ABLACION: tuple[tuple[str, dict[str, object]], ...] = (
             "filtro_metadatos": True,
             "reescritura_consulta": True,
             "reordenacion": True,
+        },
+    ),
+    (
+        "todo + reordenación",
+        {
+            "recuperador": "hibrido",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+        },
+    ),
+    (
+        "+ reescritura + reordenación (RRF)",
+        {
+            "recuperador": "denso",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+            "fusion_reordenacion": True,
+        },
+    ),
+    (
+        "todo + reordenación (RRF)",
+        {
+            "recuperador": "hibrido",
+            "filtro_metadatos": True,
+            "reescritura_consulta": True,
+            "reordenacion": True,
+            "fusion_reordenacion": True,
         },
     ),
 )

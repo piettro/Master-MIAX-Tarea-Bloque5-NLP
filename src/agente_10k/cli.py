@@ -230,12 +230,19 @@ def ablacion(
 
             proveedor = cast("ProveedorLLM", construir_proveedor(cfg))
         except NotImplementedError:
-            proveedor = None  # fase 4 aún sin implementar
+            # Fase 4 sin implementar: para medir basta un chat pelado.
+            from agente_10k.evaluacion.sistemas import ProveedorMedicion
+
+            proveedor = ProveedorMedicion(cfg)
 
     filas = ejecutar_ablacion(corpus, preguntas, cfg, proveedor)
     rutas = escribir_ablacion(filas, cfg.dir_resultados / "retrieval")
 
-    print(f"Medidas {con_ancla} preguntas con ancla, de {len(preguntas)}.\n")
+    origen = getattr(proveedor, "origen_coste", None)
+    print(f"Medidas {con_ancla} preguntas con ancla, de {len(preguntas)}.")
+    if origen:
+        print(f"Coste de la reescritura: {origen}.")
+    print()
     print(tabla_markdown(filas))
     for ruta in rutas:
         print(f"escrito {ruta}")

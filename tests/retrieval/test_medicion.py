@@ -91,7 +91,7 @@ class TestRecall:
             recuperador=espia,
         )
         assert fila.recall[1] == 1.0
-        assert fila.aciertos_por_pregunta["p1"] is True
+        assert fila.puestos["p1"] == 1
 
     def test_falla_cuando_el_ancla_no_aparece(self):
         frags = [_fragmento("c1", "dividends and share repurchases")]
@@ -105,7 +105,7 @@ class TestRecall:
             recuperador=espia,
         )
         assert fila.recall[1] == 0.0
-        assert fila.aciertos_por_pregunta["p1"] is False
+        assert fila.puestos["p1"] is None
 
     def test_solo_cuenta_preguntas_con_ancla(self):
         """Una pregunta sin ancla no mide retrieval y no entra en el recall."""
@@ -141,7 +141,7 @@ class TestRecall:
             recuperador=espia,
         )
         assert fila.recall == {1: 0.0, 3: 1.0}
-        assert fila.aciertos_por_pregunta["p1"] is True
+        assert fila.puestos["p1"] == 3
 
 
 class TestDecisionDeFiltros:
@@ -250,12 +250,17 @@ class TestEscritura:
                 0.01,
                 0.0,
                 2,
-                aciertos_por_pregunta={"p1": True},
+                puestos={"p1": 1},
             )
         ]
         rutas = escribir_ablacion(filas, tmp_path, ks=(1, 3))
         nombres = {r.name for r in rutas}
-        assert nombres == {"ablacion.md", "ablacion.csv", "ablacion_detalle.csv"}
+        assert nombres == {
+            "ablacion.md",
+            "ablacion.csv",
+            "ablacion_detalle.csv",
+            "significancia.md",
+        }
         assert all(r.is_file() for r in rutas)
         detalle = (tmp_path / "ablacion_detalle.csv").read_text(encoding="utf-8")
         assert "pregunta_id" in detalle and "p1" in detalle

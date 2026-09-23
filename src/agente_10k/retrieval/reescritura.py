@@ -13,13 +13,21 @@ si no compensa, es la sección más valiosa de la presentación. Por eso el cost
 se contabiliza aparte (`uso_acumulado`) en lugar de esconderse.
 
 La reescritura se cachea por consulta: reejecutar el golden set no puede costar
-dinero dos veces. La caché es en memoria del proceso —suficiente para una
-ejecución del set entero— y no persiste a disco; hacerlo persistente es una
-mejora posible, pero añade una fuente de resultados viejos que preferimos no
-arrastrar mientras iteramos.
+dinero dos veces. La caché es en memoria del proceso y, si se le da una ruta,
+también en disco. Lo segundo no es por dinero: el modelo no devuelve siempre la
+misma reescritura ni con temperatura 0, y sin caché en disco dos ejecuciones de
+la misma tabla de ablación dan números distintos y ninguna fila es comparable
+con la de al lado. La contrapartida —arrastrar reescrituras viejas— se paga
+borrando el fichero, y la clave lleva el modelo para que cambiarlo no sirva
+resultados de otro.
 """
 
 from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+from typing import TypedDict, cast
 
 from agente_10k.dominio.modelos import Filtros, Fragmento, UsoTokens
 from agente_10k.dominio.protocolos import ProveedorLLM, Recuperador
@@ -35,6 +43,16 @@ _SISTEMA_REESCRITURA = (
 )
 
 
+class _Entrada(TypedDict):
+    """Lo que se guarda de cada reescritura: el texto y lo que costó sacarlo."""
+
+    consulta: str
+    tokens_entrada: int
+    tokens_salida: int
+    coste_usd: float | None
+    latencia_s: float
+
+
 class ConReescritura:
     """Envuelve un recuperador y reescribe la consulta antes de buscar."""
 
@@ -43,6 +61,7 @@ class ConReescritura:
         interno: Recuperador,
         proveedor: ProveedorLLM,
         cachear: bool = True,
+        ruta_cache: Path | None = None,
     ) -> None:
         """Envuelve `interno` con una reescritura previa de la consulta.
 
@@ -51,11 +70,17 @@ class ConReescritura:
             proveedor: Quien reescribe. En los tests, un `ProveedorFake`.
             cachear: Si se guarda la reescritura de cada consulta en memoria para
                 no volver a llamar al modelo —ni a pagar— por la misma pregunta.
+            ruta_cache: Si se da, la caché también se lee y se escribe ahí, y la
+                tabla de ablación deja de moverse entre ejecuciones.
         """
         self._interno = interno
         self._proveedor = proveedor
         self._cachear = cachear
-        self._cache: dict[str, str] = {}
+        self._ruta_cache = ruta_cache if cachear else None
+        # Cada entrada guarda la reescritura Y lo que costó sacarla. Sin eso, la
+        # segunda ejecución de la tabla diría que reescribir es gratis.
+        self._cache: dict[str, _Entrada] = self._leer_cache()
+        self._latencia_ahorrada = 0.0
         # Coste acumulado de TODAS las reescrituras reales (las que fueron a
         # modelo, no las servidas de caché). Empieza en cero y solo crece cuando
         # hay una llamada de verdad: así la columna de coste refleja el gasto
@@ -67,19 +92,49 @@ class ConReescritura:
         """Identificador para la traza y la tabla de ablación."""
         return f"reescritura+{self._interno.nombre}"
 
+    def _clave(self, consulta: str) -> str:
+        """La consulta y el modelo que la reescribió: cambiar de modelo invalida."""
+        return f"{self._proveedor.modelo}|{consulta}"
+
+    def _leer_cache(self) -> dict[str, _Entrada]:
+        if self._ruta_cache is None or not self._ruta_cache.is_file():
+            return {}
+        try:
+            datos = json.loads(self._ruta_cache.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}  # una caché rota no puede tumbar una medición
+        if not isinstance(datos, dict):
+            return {}
+        return {
+            str(k): cast("_Entrada", v)
+            for k, v in datos.items()
+            if isinstance(v, dict) and "consulta" in v
+        }
+
+    def _escribir_cache(self) -> None:
+        if self._ruta_cache is None:
+            return
+        self._ruta_cache.parent.mkdir(parents=True, exist_ok=True)
+        self._ruta_cache.write_text(
+            json.dumps(self._cache, ensure_ascii=False, indent=1), encoding="utf-8"
+        )
+
     def reescribir(self, consulta: str) -> str:
         """La consulta reescrita para el corpus: en inglés y con su jerga.
 
         Si la consulta ya está en caché, se devuelve sin llamar al modelo y sin
         sumar coste. Si no, se llama una vez, se suma su uso y se guarda.
         """
-        if self._cachear and consulta in self._cache:
-            return self._cache[consulta]
+        clave = self._clave(consulta)
+        if self._cachear and clave in self._cache:
+            return self._de_cache(self._cache[clave])
 
         chat = self._proveedor.chat()
+        inicio = time.perf_counter()
         respuesta = chat.invoke(  # type: ignore[attr-defined]
             [("system", _SISTEMA_REESCRITURA), ("human", consulta)]
         )
+        latencia = time.perf_counter() - inicio
         # La respuesta puede ser un mensaje del framework (con `.content`) o —en
         # el `ProveedorFake` de los tests— la cadena tal cual. `getattr` cubre
         # los dos casos sin acoplar el dominio al tipo de LangChain.
@@ -88,10 +143,41 @@ class ConReescritura:
 
         # El coste se LEE del proveedor (usage_metadata), no se estima: es lo que
         # hace que la fila de la reescritura en la tabla cuadre con la factura.
-        self._uso = self._uso + self._proveedor.uso_ultima_llamada()
+        uso = self._proveedor.uso_ultima_llamada()
+        self._uso = self._uso + uso
         if self._cachear:
-            self._cache[consulta] = reescrita
+            self._cache[clave] = _Entrada(
+                consulta=reescrita,
+                tokens_entrada=uso.tokens_entrada,
+                tokens_salida=uso.tokens_salida,
+                coste_usd=uso.coste_usd,
+                latencia_s=latencia,
+            )
+            self._escribir_cache()
         return reescrita
+
+    def _de_cache(self, entrada: _Entrada) -> str:
+        """La reescritura guardada, sumando lo que costó la primera vez.
+
+        La caché ahorra dinero y tiempo de verdad, pero la tabla compara
+        TÉCNICAS: si los aciertos de caché contaran cero, la fila de la
+        reescritura saldría gratis e instantánea, que es justo lo contrario de
+        lo que hay que enseñar.
+        """
+        self._uso = self._uso + UsoTokens(
+            tokens_entrada=entrada.get("tokens_entrada") or 0,
+            tokens_salida=entrada.get("tokens_salida") or 0,
+            coste_usd=entrada.get("coste_usd"),
+        )
+        self._latencia_ahorrada += entrada.get("latencia_s") or 0.0
+        return str(entrada["consulta"])
+
+    def latencia_ahorrada(self) -> float:
+        """Segundos de llamada al modelo que se ahorró la caché en esta pasada.
+
+        La medición los vuelve a sumar: la caché no existe la primera vez.
+        """
+        return self._latencia_ahorrada
 
     def recuperar(
         self,

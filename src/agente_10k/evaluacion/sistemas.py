@@ -37,6 +37,87 @@ def cargar_entorno() -> None:
     load_dotenv(RAIZ_REPO / ".env", override=False)
 
 
+class _ChatQueRegistra:
+    """Envuelve el chat de LangChain para anotar el uso de cada llamada."""
+
+    def __init__(self, chat: object, anotar: Callable[[object], None]) -> None:
+        """Envuelve `chat` y llama a `anotar` con cada respuesta."""
+        self._chat = chat
+        self._anotar = anotar
+
+    def invoke(self, mensajes: object) -> object:
+        """Invoca el modelo y anota lo que gastó."""
+        respuesta = self._chat.invoke(mensajes)  # type: ignore[attr-defined]
+        self._anotar(respuesta)
+        return respuesta
+
+
+class ProveedorMedicion:
+    """Un `ProveedorLLM` mínimo, solo para medir la ablación de retrieval.
+
+    La reescritura de consulta necesita un proveedor y la fábrica de la fase 4
+    todavía no existe. Esto no monta ningún agente: abre el chat, lo envuelve
+    para leer el uso y ya. Cuando `construir_proveedor` esté, `cli` lo prefiere
+    y esto sobra.
+    """
+
+    def __init__(self, config: Settings | None = None) -> None:
+        """Comprueba la clave y deja el chat sin construir."""
+        cfg = config or settings()
+        cargar_entorno()
+        cfg.clave_api()  # que falte la clave se ve aquí, no a mitad de la tabla
+        self._cfg = cfg
+        self._chat: Any = None
+        self._uso = UsoTokens()
+        self.origen_coste = "sin datos"
+
+    @property
+    def modelo(self) -> str:
+        """El modelo activo, para la traza."""
+        return self._cfg.llm_model
+
+    @property
+    def proveedor(self) -> str:
+        """El proveedor activo, para la traza."""
+        return self._cfg.llm_provider
+
+    def chat(self) -> object:
+        """El chat, construido al primer uso y reutilizado."""
+        if self._chat is None:
+            from langchain.chat_models import init_chat_model
+
+            modelo = init_chat_model(
+                self._cfg.identificador_modelo(),
+                temperature=self._cfg.temperatura,
+            )
+            self._chat = _ChatQueRegistra(modelo, self._anotar)
+        return self._chat
+
+    def uso_ultima_llamada(self) -> UsoTokens:
+        """Tokens y coste de la última llamada, leídos de sus metadatos."""
+        return self._uso
+
+    def _anotar(self, respuesta: object) -> None:
+        # OpenRouter no siempre devuelve el coste en los metadatos. Si no
+        # viene, se estima con la tarifa, y queda dicho cuál de las dos fue:
+        # una columna de coste en blanco haría parecer gratis la reescritura.
+        uso = uso_de_mensajes([respuesta])
+        if uso.coste_usd is None:
+            from agente_10k.baseline import miax_s2
+
+            coste = float(
+                miax_s2.coste_de(
+                    {"messages": [respuesta]}, self._cfg.identificador_modelo()
+                )
+            )
+            if coste:
+                self.origen_coste = "estimado con miax_s2.PRECIOS_OPENROUTER"
+                uso = uso.model_copy(update={"coste_usd": coste})
+        else:
+            self.origen_coste = "reportado por el proveedor"
+        self._uso = uso
+
+
 def sistema_final(config: Settings | None = None) -> Sistema:
     """Nuestro agente, construido una sola vez desde la configuración."""
     from agente_10k.agente.constructor import construir_agente
