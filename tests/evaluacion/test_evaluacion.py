@@ -584,3 +584,58 @@ class TestSignificancia:
             InformeEvaluacion(etiqueta="a"), InformeEvaluacion(etiqueta="b")
         )
         assert "no comparten" in tabla
+
+
+class TestGenerarTodo:
+    """El camino que se recorre el día de la entrega, de punta a punta."""
+
+    def _escribir(self, dir_resultados, etiqueta, aciertos):
+        from agente_10k.dominio.modelos import InformeEvaluacion
+        from agente_10k.evaluacion.metricas import agregar
+
+        resultados = [_resultado(f"p{i}", acierto=a) for i, a in enumerate(aciertos, 1)]
+        informe = InformeEvaluacion(
+            etiqueta=etiqueta, resultados=resultados, metricas=agregar(resultados)
+        )
+        destino = dir_resultados / etiqueta
+        destino.mkdir(parents=True)
+        (destino / "informe.json").write_text(
+            informe.model_dump_json(indent=2), encoding="utf-8", newline="\n"
+        )
+
+    def test_saca_todas_las_tablas_cuando_estan_los_tres_informes(self, tmp_path):
+        from agente_10k.evaluacion.informe import generar_todo
+
+        resultados = tmp_path / "resultados"
+        self._escribir(resultados, "baseline", [True] * 4 + [False] * 8)
+        self._escribir(resultados, "final", [True] * 10 + [False] * 2)
+        self._escribir(resultados, "ciegas", [True] * 6 + [False] * 6)
+
+        escritos = {r.name for r in generar_todo(resultados, tmp_path / "docs")}
+        assert "tabla_principal.md" in escritos
+        assert "tabla_principal.csv" in escritos
+        assert "significancia.md" in escritos
+        assert "delta_ciegas.md" in escritos
+        assert {"resultados_baseline.md", "resultados_final.md"} <= escritos
+
+    def test_con_solo_el_baseline_no_inventa_la_comparacion(self, tmp_path):
+        """Es el estado real hasta que la fase 4 aterriza."""
+        from agente_10k.evaluacion.informe import generar_todo
+
+        resultados = tmp_path / "resultados"
+        self._escribir(resultados, "baseline", [True, False])
+        escritos = {r.name for r in generar_todo(resultados, tmp_path / "docs")}
+        assert escritos == {"resultados_baseline.md"}
+
+    def test_el_delta_de_ciegas_va_en_puntos_porcentuales(self, tmp_path):
+        from agente_10k.evaluacion.informe import cargar_informe, tabla_delta
+
+        resultados = tmp_path / "resultados"
+        self._escribir(resultados, "final", [True] * 10 + [False] * 2)
+        self._escribir(resultados, "ciegas", [True] * 6 + [False] * 6)
+        tabla = tabla_delta(
+            cargar_informe(resultados / "final" / "informe.json"),
+            cargar_informe(resultados / "ciegas" / "informe.json"),
+        )
+        assert "pp" in tabla
+        assert "-33 pp" in tabla or "−33 pp" in tabla
