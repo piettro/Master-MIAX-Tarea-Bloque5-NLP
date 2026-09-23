@@ -154,7 +154,6 @@ def pregunta_hueco() -> Pregunta:
 
 
 class TestEvaluadorCita:
-    @FASE_5
     def test_una_cita_literal_y_bien_atribuida_acierta(self, repo_fragmentos):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCita
@@ -170,7 +169,6 @@ class TestEvaluadorCita:
         )
         assert veredicto.acierto
 
-    @FASE_5
     def test_una_cita_inventada_falla(self, repo_fragmentos):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCita
@@ -187,7 +185,6 @@ class TestEvaluadorCita:
         assert not veredicto.acierto
         assert "cita_no_literal" in veredicto.detalle
 
-    @FASE_5
     def test_citar_bien_y_atribuir_mal_es_fallo_de_trazabilidad(self, repo_fragmentos):
         """Se reporta APARTE: no es lo mismo que inventarse la cita."""
         from agente_10k.dominio.modelos import RespuestaFinanciera
@@ -202,7 +199,6 @@ class TestEvaluadorCita:
         assert not veredicto.acierto
         assert "chunk_id_no_contiene_cita" in veredicto.detalle
 
-    @FASE_5
     def test_una_cita_correcta_del_documento_equivocado_es_fallo(self, repo_fragmentos):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCita
@@ -216,7 +212,6 @@ class TestEvaluadorCita:
         assert not veredicto.acierto
         assert "documento_equivocado" in veredicto.detalle
 
-    @FASE_5
     def test_degrada_si_la_pregunta_no_trae_ancla(self, repo_fragmentos):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCita
@@ -229,7 +224,6 @@ class TestEvaluadorCita:
 
 
 class TestEvaluadorCifra:
-    @FASE_5
     def test_acierta_dentro_de_la_tolerancia(self, repo_xbrl):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCifra
@@ -253,7 +247,6 @@ class TestEvaluadorCifra:
         )
         assert EvaluadorCifra(repo_xbrl).evaluar(p, respuesta).acierto
 
-    @FASE_5
     def test_acertar_el_hueco_es_cifra_none_y_fuente_ninguna(self, repo_xbrl):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCifra
@@ -265,7 +258,6 @@ class TestEvaluadorCifra:
         )
         assert EvaluadorCifra(repo_xbrl).evaluar(pregunta_hueco(), respuesta).acierto
 
-    @FASE_5
     def test_dar_una_cifra_en_un_hueco_es_alucinacion(self, repo_xbrl):
         """El peor fallo posible del sistema. Lleva categoría propia."""
         from agente_10k.dominio.modelos import RespuestaFinanciera
@@ -281,7 +273,6 @@ class TestEvaluadorCifra:
         assert not evaluador.evaluar(pregunta_hueco(), respuesta).acierto
         assert evaluador.es_alucinacion_sobre_hueco(pregunta_hueco(), respuesta)
 
-    @FASE_5
     def test_una_unidad_incoherente_es_fallo(self, repo_xbrl):
         from agente_10k.dominio.modelos import RespuestaFinanciera
         from agente_10k.evaluacion.evaluadores import EvaluadorCifra
@@ -303,7 +294,6 @@ class TestEvaluadorCifra:
 
 
 class TestEvaluadorTrayectoria:
-    @FASE_5
     def test_el_camino_correcto_acierta(self):
         from agente_10k.dominio.modelos import LlamadaHerramienta, Traza
         from agente_10k.evaluacion.evaluadores import EvaluadorTrayectoria
@@ -313,7 +303,6 @@ class TestEvaluadorTrayectoria:
         )
         assert EvaluadorTrayectoria().evaluar(pregunta_hueco(), traza).acierto
 
-    @FASE_5
     def test_acertar_por_el_camino_equivocado_es_FALLO(self):
         """El criterio central de la práctica. Columna propia en el informe."""
         from agente_10k.dominio.modelos import LlamadaHerramienta, Traza
@@ -329,7 +318,6 @@ class TestEvaluadorTrayectoria:
             == "camino_incorrecto_respuesta_correcta"
         )
 
-    @FASE_5
     def test_degrada_si_no_hay_herramienta_esperada(self):
         from agente_10k.dominio.modelos import Traza
         from agente_10k.evaluacion.evaluadores import EvaluadorTrayectoria
@@ -339,8 +327,138 @@ class TestEvaluadorTrayectoria:
         assert veredicto.veredicto == "no_aplica"
 
 
+class TestDecisionesDeLosEvaluadores:
+    """Lo que los evaluadores deciden más allá de la especificación mínima.
+
+    Cada caso es una decisión que hay que poder defender el día 24, y aquí queda
+    escrita como algo que se ejecuta.
+    """
+
+    def test_una_cita_recortada_con_elipsis_y_comillas_acierta(self, repo_fragmentos):
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCita
+
+        respuesta = RespuestaFinanciera(
+            respuesta="x",
+            fuente="texto",
+            cita="“Our AI systems offer users … powerful tools and capabilities.”",
+            chunk_id="MSFT-2025-1A-0001",
+        )
+        veredicto = EvaluadorCita(repo_fragmentos).evaluar(
+            pregunta_extractiva(), respuesta
+        )
+        assert veredicto.acierto, veredicto.motivo
+
+    def test_una_cita_literal_lejos_del_ancla_no_la_respalda(self, repo_fragmentos):
+        """Existir no basta: tiene que ser el pasaje que responde la pregunta."""
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCita
+
+        respuesta = RespuestaFinanciera(
+            respuesta="x",
+            fuente="texto",
+            cita="We may not be able to detect every misuse in time.",
+            chunk_id="MSFT-2025-1A-0002",
+        )
+        veredicto = EvaluadorCita(repo_fragmentos).evaluar(
+            pregunta_extractiva(), respuesta
+        )
+        assert not veredicto.acierto
+        assert "no_respalda_ancla" in veredicto.detalle
+
+    def test_una_cita_de_dos_palabras_no_prueba_nada(self, repo_fragmentos):
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCita
+
+        respuesta = RespuestaFinanciera(
+            respuesta="x",
+            fuente="texto",
+            cita="AI systems",
+            chunk_id="MSFT-2025-1A-0001",
+        )
+        veredicto = EvaluadorCita(repo_fragmentos).evaluar(
+            pregunta_extractiva(), respuesta
+        )
+        assert "cita_no_literal" in veredicto.detalle
+
+    def test_una_respuesta_xbrl_sin_ancla_no_se_evalua_por_cita(self, repo_fragmentos):
+        """Exigir frase del informe a una cifra de XBRL castigaría el camino bueno."""
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCita
+
+        respuesta = RespuestaFinanciera(
+            respuesta="x",
+            fuente="xbrl",
+            cifra=1.0,
+            cita="NVDA FY2024 Revenues = 60,922",
+        )
+        veredicto = EvaluadorCita(repo_fragmentos).evaluar(pregunta_hueco(), respuesta)
+        assert veredicto.veredicto == "no_aplica"
+
+    def test_una_cifra_copiada_en_millones_falla_con_diagnostico(self, repo_xbrl):
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCifra
+
+        p = Pregunta(
+            id="n-003",
+            pregunta="?",
+            familia="numerica",
+            ticker="NVDA",
+            fiscal_year=2024,
+            concept_xbrl="Revenues",
+            cifra_esperada=60_922_000_000.0,
+            unidad="USD",
+        )
+        respuesta = RespuestaFinanciera(
+            respuesta="x", cifra=60_922.0, unidad="millones de USD", fuente="xbrl"
+        )
+        veredicto = EvaluadorCifra(repo_xbrl).evaluar(p, respuesta)
+        assert not veredicto.acierto
+        assert "escala" in veredicto.detalle
+        assert "unidad_incoherente" not in veredicto.detalle
+
+    def test_un_hueco_mal_marcado_no_castiga_la_cifra_correcta(self, repo_xbrl):
+        """Si XBRL sí tiene el dato, manda XBRL, no la etiqueta del golden set."""
+        from agente_10k.dominio.modelos import RespuestaFinanciera
+        from agente_10k.evaluacion.evaluadores import EvaluadorCifra
+
+        p = pregunta_hueco().model_copy(update={"concept_xbrl": "NetIncomeLoss"})
+        respuesta = RespuestaFinanciera(
+            respuesta="x", cifra=65_000_000_000.0, unidad="USD", fuente="xbrl"
+        )
+        evaluador = EvaluadorCifra(repo_xbrl)
+        assert evaluador.evaluar(p, respuesta).acierto
+        assert not evaluador.es_alucinacion_sobre_hueco(p, respuesta)
+
+    def test_una_comparativa_necesita_cifra_y_cita(self):
+        from agente_10k.dominio.modelos import VeredictoEvaluador
+        from agente_10k.evaluacion.evaluadores import es_respuesta_correcta
+
+        bien = VeredictoEvaluador(veredicto="acierto")
+        mal = VeredictoEvaluador(veredicto="fallo")
+        nada = VeredictoEvaluador(veredicto="no_aplica")
+        assert es_respuesta_correcta("comparativa", bien, bien) is True
+        assert es_respuesta_correcta("comparativa", bien, mal) is False
+        assert es_respuesta_correcta("comparativa", nada, bien) is True
+        assert es_respuesta_correcta("comparativa", nada, nada) is None
+
+    def test_una_lectura_cara_de_mas_no_suspende_pero_se_anota(self):
+        from agente_10k.dominio.modelos import LlamadaHerramienta, Traza
+        from agente_10k.evaluacion.evaluadores import EvaluadorTrayectoria
+
+        traza = Traza(
+            pregunta="?",
+            llamadas=[
+                LlamadaHerramienta(nombre="read_section"),
+                LlamadaHerramienta(nombre="get_xbrl_fact"),
+            ],
+        )
+        veredicto = EvaluadorTrayectoria().evaluar(pregunta_hueco(), traza)
+        assert veredicto.acierto
+        assert veredicto.detalle["lectura_cara_innecesaria"] == 1
+
+
 class TestEjecutor:
-    @FASE_5
     def test_una_pregunta_que_lanza_no_aborta_las_demas(self, tmp_path):
         from agente_10k.evaluacion.ejecutor import evaluar
 
@@ -362,7 +480,6 @@ class TestInforme:
         assert "latencia media" in COLUMNAS_MENOR_ES_MEJOR
         assert "tool calls/pregunta" in COLUMNAS_MENOR_ES_MEJOR
 
-    @FASE_5
     def test_la_tabla_principal_remarca_el_mejor_valor(self):
         from agente_10k.dominio.modelos import InformeEvaluacion
         from agente_10k.evaluacion.informe import tabla_principal
