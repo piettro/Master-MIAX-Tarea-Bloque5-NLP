@@ -106,10 +106,69 @@ def baseline(
 
 
 @app.command()
-def ablacion() -> None:
-    """Regenera la tabla de ablación del retrieval. FASE 3."""
-    print("Pendiente de la fase 3 (Alonso): retrieval/ y su runner de medición.")
-    raise typer.Exit(1)
+def ablacion(
+    ruta_golden: Path = RUTA_GOLDEN_POR_DEFECTO,
+) -> None:
+    """Regenera la tabla de ablación del retrieval. FASE 3.
+
+    Recorre `CONFIGURACIONES_ABLACION`, mide `recall@k` contra el ancla de texto
+    del golden set y escribe `resultados/retrieval/ablacion.{md,csv}` más el
+    detalle por pregunta. Necesita el corpus montado y un golden set con anclas;
+    si falta algo, lo dice en vez de escribir una tabla vacía.
+
+    La fila de la reescritura necesita un proveedor de LLM (fase 4): si no hay
+    clave, esa fila sale marcada como «pendiente» y las demás se miden igual.
+    """
+    from agente_10k.corpus import cargar_corpus
+    from agente_10k.dominio.errores import CorpusNoEncontrado
+    from agente_10k.evaluacion.ejecutor import leer_preguntas
+    from agente_10k.retrieval.medicion import (
+        ejecutar_ablacion,
+        escribir_ablacion,
+        tabla_markdown,
+    )
+
+    cfg = settings()
+    try:
+        corpus = cargar_corpus(cfg)
+    except CorpusNoEncontrado as exc:
+        print(f"No se puede medir: falta el corpus ({exc}).")
+        print("Descomprime corpus_miax_2026.zip e indice_faiss.zip en data/corpus/.")
+        raise typer.Exit(1) from exc
+
+    if not ruta_golden.is_file():
+        print(f"No se puede medir: no existe el golden set en {ruta_golden}.")
+        print("Escribe golden/golden_set.jsonl (fase 2) antes de medir el recall.")
+        raise typer.Exit(1)
+
+    preguntas = leer_preguntas(ruta_golden)
+    con_ancla = sum(1 for p in preguntas if p.ancla_texto)
+    if con_ancla == 0:
+        print(
+            f"El golden set tiene {len(preguntas)} preguntas pero ninguna con "
+            "ancla_texto: el recall@k se mide contra el ancla, así que no hay "
+            "nada que medir todavía. Añade preguntas extractivas."
+        )
+        raise typer.Exit(1)
+
+    # El proveedor solo hace falta para la fila de la reescritura; si no hay
+    # clave, se mide el resto y esa fila queda pendiente, sin abortar.
+    proveedor = None
+    if cfg.hay_clave():
+        try:
+            from agente_10k.agente.proveedores import construir_proveedor
+
+            proveedor = construir_proveedor(cfg)  # type: ignore[assignment]
+        except NotImplementedError:
+            proveedor = None  # fase 4 aún sin implementar
+
+    filas = ejecutar_ablacion(corpus, preguntas, cfg, proveedor)
+    rutas = escribir_ablacion(filas, cfg.dir_resultados / "retrieval")
+
+    print(f"Medidas {con_ancla} preguntas con ancla, de {len(preguntas)}.\n")
+    print(tabla_markdown(filas))
+    for ruta in rutas:
+        print(f"escrito {ruta}")
 
 
 @app.command()

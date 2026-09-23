@@ -1,9 +1,9 @@
-"""Retrieval. Lo verde es el denso; lo `xfail` es la especificación de la fase 3.
+"""Retrieval: el denso, y las cuatro mejoras de la fase 3 ya implementadas.
 
-Los `xfail(strict=True)` son deliberados: la suite queda verde, pero la
-especificación sigue visible y en cuanto alguien implemente la pieza el test
-pasa a `XPASS` y falla, obligando a quitar la marca. Es un recordatorio que no
-se puede ignorar.
+Estos tests nacieron como `xfail(strict=True)` (ADR-010): la suite quedaba verde
+pero la especificación seguía visible, y al implementar cada pieza el test pasaba
+a `XPASS` y fallaba, obligando a quitar la marca. La fase 3 (Alonso) está hecha,
+así que las marcas se han quitado y estos tests corren en verde de verdad.
 """
 
 from __future__ import annotations
@@ -14,8 +14,6 @@ import pytest
 from agente_10k.dominio.modelos import Filtros
 from agente_10k.retrieval.codificador import PREFIJO_CONSULTA_BGE, CodificadorBge
 from agente_10k.retrieval.denso import RecuperadorDenso, leer_vectores_planos
-
-FASE_3 = pytest.mark.xfail(strict=True, reason="Fase 3 · Alonso")
 
 
 class CodificadorDePrueba:
@@ -165,21 +163,19 @@ class TestLectorDeIndicePlano:
 
 
 # ---------------------------------------------------------------------------
-# FASE 3 — la especificación, en rojo
+# FASE 3 — implementada: RRF, tokenizador de BM25, filtro previo y reescritura
 # ---------------------------------------------------------------------------
 
 
 class TestFusionRrf:
     """RRF se prueba con rankings sintéticos: sin modelo, sin índice, sin red."""
 
-    @FASE_3
     def test_un_documento_primero_en_las_dos_listas_gana(self):
         from agente_10k.retrieval.hibrido import fusionar_rrf
 
         fusion = fusionar_rrf([["a", "b", "c"], ["a", "c", "b"]], k_rrf=60)
         assert fusion[0][0] == "a"
 
-    @FASE_3
     def test_un_documento_que_solo_ve_uno_puede_superar_a_uno_mediocre(self):
         """Es la razón de ser de la fusión: rescatar lo que un recuperador ve y
         el otro no."""
@@ -188,7 +184,6 @@ class TestFusionRrf:
         fusion = dict(fusionar_rrf([["x", "m"], ["m", "y"]], k_rrf=1))
         assert fusion["m"] > fusion["x"]
 
-    @FASE_3
     def test_no_suma_puntuaciones_sino_puestos(self):
         """La similitud coseno vive en [-1,1] y BM25 no tiene cota: sumarlas es
         comparar magnitudes que no son comparables."""
@@ -197,7 +192,6 @@ class TestFusionRrf:
         fusion = dict(fusionar_rrf([["a"], ["b"]], k_rrf=60))
         assert fusion["a"] == pytest.approx(fusion["b"])
 
-    @FASE_3
     def test_k_rrf_cambia_el_resultado(self):
         from agente_10k.retrieval.hibrido import fusionar_rrf
 
@@ -208,13 +202,11 @@ class TestFusionRrf:
 class TestTokenizadorBm25:
     """En texto financiero los números y los guiones importan."""
 
-    @FASE_3
     def test_no_parte_los_numeros_por_el_separador_de_millar(self):
         from agente_10k.retrieval.lexico import tokenizar
 
         assert "60,922" in tokenizar("Revenue $ 60,922 million")
 
-    @FASE_3
     def test_conserva_las_palabras_con_guion(self):
         from agente_10k.retrieval.lexico import tokenizar
 
@@ -222,7 +214,6 @@ class TestTokenizadorBm25:
 
 
 class TestFiltroPrevio:
-    @FASE_3
     def test_filtrar_antes_no_desperdicia_el_presupuesto_de_k(self, repo_fragmentos):
         """Filtrar después de recuperar k puede devolver cero resultados
         habiendo gastado la búsqueda entera."""
@@ -235,7 +226,6 @@ class TestFiltroPrevio:
         assert len(encontrados) == 3
         assert {f.ticker for f in encontrados} == {"AMZN"}
 
-    @FASE_3
     def test_devuelve_un_recuperador(self, repo_fragmentos):
         """P2: el decorador tiene que poder envolverse otra vez."""
         from agente_10k.dominio.protocolos import Recuperador
@@ -248,7 +238,6 @@ class TestFiltroPrevio:
 
 
 class TestReescritura:
-    @FASE_3
     def test_traduce_la_consulta_al_idioma_del_corpus(self, repo_fragmentos):
         from agente_10k.agente.proveedores import ProveedorFake
         from agente_10k.retrieval.reescritura import ConReescritura
@@ -259,7 +248,6 @@ class TestReescritura:
             "AI misuse by third parties"
         )
 
-    @FASE_3
     def test_contabiliza_lo_que_cuesta(self, repo_fragmentos):
         """Sin esto, la fila de la reescritura en la tabla parecería gratis."""
         from agente_10k.agente.proveedores import ProveedorFake

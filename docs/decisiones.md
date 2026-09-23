@@ -273,6 +273,81 @@ trampas.
 
 ---
 
+## ADR-013 · El tokenizador de BM25 conserva números y guiones
+
+**Contexto.** BM25 se añade porque el denso falla justo donde importa en
+finanzas: un ticker, una cifra o un nombre propio no tienen vecindario
+semántico. Pero esa ventaja depende del tokenizador. Un `str.split()` o un
+tokenizador que parta por todo signo convierte «60,922» en «60» y «922», y
+«AI-related» en «ai» y «related» —y entonces BM25 deja de encontrar exactamente
+lo que se le añadió a encontrar—.
+
+**Opciones.** (a) El tokenizador por defecto de la librería. (b) Uno propio que
+conserve como una sola unidad los números con separador de millar y las palabras
+con guion o punto interno.
+
+**Decisión.** (b). `lexico.tokenizar` usa la regex
+`[a-z0-9]+(?:[.,-][a-z0-9]+)*` sobre el texto en minúsculas: mantiene «60,922»,
+«ai-related» y «u.s.» enteros, y descarta el «$», los espacios y el punto final
+de frase. La consulta y el corpus se tokenizan con la MISMA función; si se
+separaran, «60,922» en la pregunta no casaría con «60,922» en el fragmento.
+
+**Consecuencia.** BM25 aporta lo que tenía que aportar. Un test fija los dos
+casos (`test_no_parte_los_numeros_por_el_separador_de_millar`,
+`test_conserva_las_palabras_con_guion`) para que un cambio futuro del tokenizador
+que los rompa salte en la suite.
+
+---
+
+## ADR-014 · Fusión por RRF, no por suma de puntuaciones
+
+**Contexto.** El híbrido combina denso y BM25. La coseno del denso vive en
+[-1, 1] y la puntuación BM25 no tiene cota ni escala fija. Sumarlas o
+promediarlas es comparar magnitudes no comparables: el resultado lo domina
+siempre el recuperador de números más grandes, no el de más razón.
+
+**Opciones.** (a) Suma o media ponderada de puntuaciones. (b) Reciprocal Rank
+Fusion, que ignora las puntuaciones y usa solo el PUESTO de cada documento.
+
+**Decisión.** (b). `RRF(d) = Σ peso · 1/(k + puesto(d))`, con `puesto` desde 1.
+El `k` de RRF va en `Settings.rrf_k` (60 por defecto, el del paper) porque es un
+parámetro de la ablación, no una constante. El desempate es por `chunk_id`, para
+que la tabla sea reproducible entre ejecuciones.
+
+**Consecuencia.** La fusión es justa: un documento que un recuperador ve tarde y
+el otro no ve puede superar a uno mediocre por consenso de puestos. `fusionar_rrf`
+es una función pura sobre listas de `chunk_id` y se prueba sin modelo, sin índice
+y sin red.
+
+---
+
+## ADR-015 · La fila base de la ablación no recibe los filtros
+
+**Contexto.** El `RecuperadorDenso` que entregamos filtra DURANTE su barrido:
+recorre todo el índice en orden de puntuación y se queda con los `k` primeros que
+pasen los metadatos. Eso significa que si al medir la fila base le pasáramos los
+filtros de la pregunta, la fila «+ filtro metadatos» saldría idéntica y la mejora
+parecería nula —cuando en realidad el filtro previo sí ayuda a un agente que no
+sabe de antemano de qué emisor es la pregunta—.
+
+**Opciones.** (a) Pasar siempre los filtros y arriesgar una tabla en la que la
+mejora del filtro es cero por construcción. (b) Que la fila base busque SIN
+metadatos —como el baseline del profesor, que filtra después— y solo las filas
+con `filtro_metadatos=True` los apliquen.
+
+**Decisión.** (b). En `medicion.medir_configuracion`, los filtros se pasan solo
+cuando `cfg.filtro_metadatos` está activo. La fila base mide el recall del denso
+sobre el corpus entero; la fila del filtro mide lo que se gana al restringir el
+espacio antes de buscar. Es el punto de ADR-009 llevado a la medición.
+
+**Consecuencia.** La tabla de ablación mide de verdad lo que separa cada fila de
+la anterior, y no un artefacto de que el denso ya filtraba. El decorador
+`ConFiltroMetadatos`, además, sobre-muestrea al tamaño del corpus antes de
+recortar: así el resultado es correcto aunque el recuperador envuelto ignore los
+filtros, a cambio de pedir de más sobre 1.749 fragmentos, que es gratis.
+
+---
+
 ## Pendiente de decidir
 
 - **Troceado propio.** El corpus viene troceado a ~500 tokens con 80 de solape.
