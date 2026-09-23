@@ -489,3 +489,98 @@ class TestInforme:
             InformeEvaluacion(etiqueta="final"),
         )
         assert "**" in tabla
+
+
+def _resultado(pid, *, acierto, familia="numerica", hueco=False, fuente="xbrl"):
+    from agente_10k.dominio.modelos import RespuestaFinanciera, ResultadoPregunta
+
+    return ResultadoPregunta(
+        pregunta_id=pid,
+        familia=familia,
+        es_hueco=hueco,
+        acierto=acierto,
+        respuesta_correcta=acierto,
+        respuesta=RespuestaFinanciera(respuesta="x", fuente=fuente),
+    )
+
+
+class TestMetricasNuevas:
+    """MRR, denominadores por familia y abstención indebida."""
+
+    def test_el_mrr_es_la_media_del_inverso_del_puesto(self):
+        from agente_10k.evaluacion.metricas import mrr
+
+        assert mrr({"a": 1, "b": 2, "c": None}) == pytest.approx((1 + 0.5 + 0) / 3)
+
+    def test_sin_puestos_el_mrr_es_cero(self):
+        from agente_10k.evaluacion.metricas import mrr
+
+        assert mrr({}) == 0.0
+
+    def test_guarda_el_denominador_de_cada_familia(self):
+        """Sin `n`, no se puede poner un intervalo al lado de la proporción."""
+        from agente_10k.evaluacion.metricas import agregar
+
+        metricas = agregar(
+            [
+                _resultado("a", acierto=True),
+                _resultado("b", acierto=False),
+                _resultado("c", acierto=True, familia="extractiva"),
+            ]
+        )
+        assert metricas.n_por_familia["numerica"] == 2
+        assert metricas.n_por_familia["total"] == 3
+        assert metricas.aciertos_por_familia["numerica"] == pytest.approx(0.5)
+
+    def test_cuenta_la_abstencion_indebida_solo_donde_habia_dato(self):
+        from agente_10k.evaluacion.metricas import agregar
+
+        metricas = agregar(
+            [
+                _resultado("a", acierto=False, fuente="ninguna"),
+                _resultado("b", acierto=True),
+                _resultado("c", acierto=True, hueco=True, fuente="ninguna"),
+            ]
+        )
+        # El hueco no entra: ahí abstenerse es lo correcto.
+        assert metricas.tasa_abstencion_indebida == pytest.approx(0.5)
+
+
+class TestSignificancia:
+    """La tabla que dice si la mejora aguanta un contraste."""
+
+    def _informe(self, etiqueta, aciertos):
+        from agente_10k.dominio.modelos import InformeEvaluacion
+        from agente_10k.evaluacion.metricas import agregar
+
+        resultados = [_resultado(f"p{i}", acierto=a) for i, a in enumerate(aciertos, 1)]
+        return InformeEvaluacion(
+            etiqueta=etiqueta, resultados=resultados, metricas=agregar(resultados)
+        )
+
+    def test_lleva_los_dos_intervalos_y_el_p_valor(self):
+        from agente_10k.evaluacion.informe import tabla_significancia
+
+        a = self._informe("baseline", [True] * 4 + [False] * 8)
+        b = self._informe("final", [True] * 11 + [False])
+        tabla = tabla_significancia(a, b)
+        assert "4/12" in tabla and "11/12" in tabla
+        assert "IC 95 %" in tabla
+        assert "p = 0.016" in tabla
+        assert "significativa" in tabla
+
+    def test_dice_cuando_no_se_puede_descartar_el_ruido(self):
+        from agente_10k.evaluacion.informe import tabla_significancia
+
+        a = self._informe("baseline", [True] * 10 + [False] * 10)
+        b = self._informe("final", [True] * 12 + [False] * 8)
+        assert "no se puede descartar" in tabla_significancia(a, b)
+
+    def test_sin_preguntas_comunes_lo_dice_en_vez_de_inventar(self):
+        from agente_10k.dominio.modelos import InformeEvaluacion
+        from agente_10k.evaluacion.informe import tabla_significancia
+
+        tabla = tabla_significancia(
+            InformeEvaluacion(etiqueta="a"), InformeEvaluacion(etiqueta="b")
+        )
+        assert "no comparten" in tabla
