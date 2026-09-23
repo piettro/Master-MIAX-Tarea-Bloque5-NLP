@@ -1,10 +1,8 @@
 """El validador del golden set. CONTRATO C4.
 
-El test sobre el fichero real está marcado `xfail(strict=True)`: hoy el golden
-set no existe y tiene que estar en verde antes del 17 de septiembre, porque la
-sesión 2 empieza ejecutando nuestro baseline y clasificando sus fallos. Cuando
-las 20 preguntas estén escritas, este test pasará a XPASS y obligará a quitar la
-marca, que es exactamente el recordatorio que hace falta.
+El test sobre el fichero real estuvo en `xfail(strict=True)` hasta que el golden
+set tuvo las 20 preguntas. Ya las tiene, así que la marca se fue: ahora es un
+test normal y cualquier pregunta mal escrita lo rompe.
 """
 
 from __future__ import annotations
@@ -253,11 +251,6 @@ def test_el_golden_set_de_ejemplo_del_profesor_se_lee():
     assert len(leer(ruta)) == 3
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="FASE 2 · los tres: 20 preguntas, >=6 comparativas, >=2 huecos. "
-    "Tiene que estar en verde antes del 17 de septiembre.",
-)
 def test_nuestro_golden_set_esta_completo_y_es_valido():
     ruta = RAIZ / "golden" / "golden_set.jsonl"
     problemas = (

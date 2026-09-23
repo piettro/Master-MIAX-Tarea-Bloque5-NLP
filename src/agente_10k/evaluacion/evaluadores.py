@@ -1,33 +1,6 @@
-"""Los TRES evaluadores del enunciado. FASE 5 — Raúl.
+"""Los tres evaluadores del enunciado: cita, cifra y trayectoria.
 
-**1 · CITA.** Que la cita exista y que respalde de verdad lo que se afirma.
-Cuatro comprobaciones distintas que se reportan por separado porque fallan por
-motivos distintos: que el texto citado aparezca literalmente en el corpus (con
-la normalización de `corpus/normalizacion.py`, documentada); que el `chunk_id`
-declarado contenga esa cita —citar bien y atribuir mal es un fallo de
-trazabilidad, no de recuperación—; que el fragmento pertenezca al emisor,
-ejercicio y sección que la pregunta pedía, porque una cita correcta del
-documento equivocado es un fallo; y que la cita esté junto al ancla del golden
-set, porque una frase literal que no tiene nada que ver con la pregunta existe
-pero no respalda nada.
-
-**2 · CIFRA.** Que el número coincida con XBRL dentro de la tolerancia
-DOCUMENTADA, importando el mismo objeto `Tolerancia` que usa el guardarraíl de
-la fase 4. Un solo sitio, o los dos números se separan y la tabla deja de ser
-defendible. Caso especial obligatorio: cuando la respuesta esperada es un hueco,
-acertar significa `cifra=None` y `fuente="ninguna"`; dar una cifra plausible es
-el peor fallo posible del sistema y lleva categoría propia.
-
-**3 · TRAYECTORIA.** Que la respuesta pasara por la herramienta que tocaba.
-Acertar por el camino equivocado cuenta como FALLO y se reporta en su propia
-columna: es el criterio central de la práctica. La regla es de INCLUSIÓN
-(`agente/trazas.py::cumple_trayectoria`), la misma que usa el profesor en la
-sesión 2: una llamada de más es ineficiencia y se ve en la columna de llamadas
-por pregunta; que falte la herramienta esperada es el fallo.
-
-Todos degradan a `no_aplica` cuando la pregunta no trae el campo que necesitan.
-El día 24 pueden llegar diez preguntas con solo `id` y `pregunta`, y un
-evaluador que aborte por eso tumba la demostración entera.
+Cada uno degrada a `no_aplica` cuando la pregunta no trae el campo que necesita.
 """
 
 from __future__ import annotations
@@ -52,29 +25,14 @@ from agente_10k.dominio.protocolos import (
 )
 from agente_10k.dominio.tolerancia import TOLERANCIA, Tolerancia
 
+# Por debajo de esto una «cita» aparece en medio corpus y no prueba nada.
 MINIMO_CARACTERES_CITA = 20
-"""Por debajo de esto una «cita» no prueba nada.
 
-«revenue increased» aparece en decenas de fragmentos: encontrarla en el corpus
-no dice que el agente haya leído el pasaje que responde la pregunta.
-"""
-
+# Distancia máxima entre cita y ancla en la misma sección: un párrafo largo.
 VENTANA_RESPALDO = 600
-"""Caracteres de distancia máxima entre la cita y el ancla en la misma sección.
 
-El agente no tiene por qué citar exactamente la frase que eligió el autor de la
-pregunta: la frase anterior o la siguiente del mismo párrafo respaldan lo mismo.
-Seiscientos caracteres son un párrafo largo de un 10-K; más allá ya es otro
-asunto de la misma sección.
-"""
-
+# Factores con los que se comprueba si una cifra fallida está en otra escala.
 ESCALAS_SOSPECHOSAS = (1e3, 1e6, 1e9)
-"""Factores con los que se comprueba si una cifra fallida está en otra escala.
-
-Las tablas del 10-K van en millones y la tentación de copiar «60,922» tal cual
-es grande. Detectarlo no lo convierte en acierto: lo convierte en un fallo con
-diagnóstico, que es lo que hace falta para arreglarlo.
-"""
 
 _ELIPSIS = re.compile(r"\s*(?:\[\s*(?:\.\.\.|…)\s*\]|\.\.\.|…)\s*")
 _COMILLAS_EXTREMOS = "\"'“”‘’«» "
@@ -98,13 +56,7 @@ def _no_aplica(motivo: str) -> VeredictoEvaluador:
 
 
 def trozos_de_cita(cita: str) -> list[str]:
-    """La cita partida por sus elipsis, sin comillas en los extremos.
-
-    El modelo recorta: «Our AI systems … may misuse them» es una cita honesta de
-    dos trozos del mismo pasaje. Cada trozo se busca por separado y los que no
-    llegan a `MINIMO_CARACTERES_CITA` se descartan, porque un «and» suelto
-    aparece en todas partes.
-    """
+    """La cita partida por sus elipsis, sin comillas ni trozos demasiado cortos."""
     trozos = (t.strip(_COMILLAS_EXTREMOS) for t in _ELIPSIS.split(cita))
     return [t for t in trozos if len(normalizar(t)) >= MINIMO_CARACTERES_CITA]
 
@@ -120,13 +72,8 @@ class EvaluadorCita:
     ) -> None:
         """Monta el evaluador sobre los repositorios del corpus.
 
-        Args:
-            fragmentos: Donde se comprueba el `chunk_id` y se busca la cita.
-            secciones: Opcional. Con ellas se acepta una cita que cruce la
-                frontera entre dos fragmentos y se mide la distancia al ancla
-                dentro de la sección. Sin ellas, ambas cosas se miran solo
-                dentro de un fragmento.
-            ventana_respaldo: Ver `VENTANA_RESPALDO`.
+        Sin `secciones`, la cita y la distancia al ancla se miran solo dentro
+        de un fragmento.
         """
         self._fragmentos = fragmentos
         self._secciones = secciones
@@ -136,17 +83,7 @@ class EvaluadorCita:
     def evaluar(
         self, pregunta: Pregunta, respuesta: RespuestaFinanciera
     ) -> VeredictoEvaluador:
-        """El veredicto sobre la cita, con el motivo del fallo si lo hay.
-
-        En `detalle` deja separadas las causas —`cita_no_literal`,
-        `chunk_id_no_contiene_cita`, `documento_equivocado`,
-        `no_respalda_ancla`, `sin_cita`, `sin_chunk_id`— para que el informe
-        pueda decir cuál domina en vez de un porcentaje agregado.
-
-        No aplica cuando la pregunta no trae ancla y la respuesta no cita texto:
-        una cifra de XBRL no tiene frase del informe que la respalde, y exigirla
-        castigaría justo el camino correcto.
-        """
+        """El veredicto sobre la cita, con las causas separadas en `detalle`."""
         cita = (respuesta.cita or "").strip()
         if not cita:
             if pregunta.ancla_texto:
@@ -194,9 +131,7 @@ class EvaluadorCita:
     ) -> Fragmento | None:
         """El fragmento del `chunk_id`, si existe y contiene la cita.
 
-        Anota en `detalle` por qué no vale cuando no vale. Citar bien y atribuir
-        mal es fallo de trazabilidad: la cita existe, pero no se puede verificar
-        desde donde el agente dice que la sacó.
+        Anota en `detalle` por qué no vale cuando no vale.
         """
         if not chunk_id:
             detalle["sin_chunk_id"] = (
@@ -226,11 +161,7 @@ class EvaluadorCita:
         )
 
     def _textos_candidatos(self, pregunta: Pregunta, trozo: str) -> list[str]:
-        """Donde medir la distancia entre cita y ancla, ya normalizado.
-
-        La sección de la pregunta si hay secciones y se sabe cuál es; si no, los
-        fragmentos que contienen la cita.
-        """
+        """Dónde medir la distancia entre cita y ancla, ya normalizado."""
         if self._secciones is not None and pregunta.ticker and pregunta.fiscal_year:
             return [
                 texto
@@ -258,8 +189,7 @@ class EvaluadorCita:
 def _distancia(texto: str, ancla: str, trozo: str) -> float:
     """Caracteres entre el ancla y la cita dentro de `texto` ya normalizado.
 
-    `inf` si alguna de las dos no está. Se mide de borde a borde, no de inicio a
-    inicio: dos frases contiguas están a distancia cero.
+    De borde a borde, e `inf` si alguna de las dos no está.
     """
     a, c = normalizar(ancla), normalizar(trozo)
     ia, ic = texto.find(a), texto.find(c)
@@ -273,8 +203,7 @@ def _distancia(texto: str, ancla: str, trozo: str) -> float:
 def _mismo_documento(pregunta: Pregunta, fragmento: Fragmento) -> bool:
     """Si el fragmento es del emisor, ejercicio y sección que se pedían.
 
-    Solo se comparan los campos que la pregunta declara: una pregunta ciega sin
-    `item_esperado` no puede suspender por la sección.
+    Solo compara los campos que la pregunta declara.
     """
     return (
         (pregunta.ticker is None or fragmento.ticker == pregunta.ticker)
@@ -306,12 +235,7 @@ def _documento_pedido(pregunta: Pregunta) -> str:
 
 
 def unidad_canonica(unidad: str | None) -> str | None:
-    """La unidad reducida a una categoría comparable.
-
-    El modelo escribe «USD», «$», «dólares» o «millones de dólares» para lo
-    mismo. Lo que importa es no confundir dinero con acciones o con porcentaje;
-    la escala (millones) la juzga la cifra, no la etiqueta.
-    """
+    """La unidad reducida a una categoría comparable: USD, acciones, porcentaje."""
     texto = normalizar(unidad or "").lower()
     if not texto:
         return None
@@ -334,14 +258,7 @@ class EvaluadorCifra:
         xbrl: RepositorioXbrl,
         tolerancia: Tolerancia | None = None,
     ) -> None:
-        """Monta el evaluador con la MISMA tolerancia que el guardarraíl.
-
-        Args:
-            xbrl: La fuente autorizada. Manda sobre `cifra_esperada` cuando la
-                pregunta declara concepto, emisor y ejercicio.
-            tolerancia: Por defecto, `dominio.tolerancia.TOLERANCIA`: la
-                instancia que importa también el guardarraíl.
-        """
+        """Monta el evaluador con la misma tolerancia que el guardarraíl."""
         self._xbrl = xbrl
         self._tolerancia = tolerancia or TOLERANCIA
 
@@ -411,21 +328,14 @@ class EvaluadorCifra:
         return None if hecho is None else hecho.value
 
     def _esperada(self, pregunta: Pregunta) -> float | None:
-        """La cifra contra la que se compara: XBRL si se puede, si no el golden.
-
-        El enunciado dice que la cifra se contrasta con XBRL. El golden set se
-        verificó contra XBRL al escribirlo, así que en el caso normal las dos
-        coinciden; si algún día no, manda la fuente autorizada.
-        """
+        """La cifra contra la que se compara: XBRL si se puede, si no el golden."""
         hecho = self._hecho(pregunta)
         return hecho if hecho is not None else pregunta.cifra_esperada
 
     def _es_hueco(self, pregunta: Pregunta) -> bool:
-        """Hueco según la pregunta, salvo que XBRL diga que el dato SÍ existe.
+        """Hueco según la pregunta, salvo que XBRL diga que el dato sí existe.
 
-        Una pregunta marcada como hueco cuyo concepto sí se reporta tiene el
-        golden set mal escrito; el validador lo avisa y aquí no se castiga al
-        agente por dar la cifra correcta.
+        Si XBRL lo reporta, el golden set está mal escrito y no se castiga al agente.
         """
         return pregunta.es_hueco and self._hecho(pregunta) is None
 
@@ -445,13 +355,7 @@ class EvaluadorTrayectoria:
     """Evaluador 3: la respuesta pasó por la herramienta que tocaba."""
 
     def evaluar(self, pregunta: Pregunta, traza: Traza) -> VeredictoEvaluador:
-        """El veredicto sobre el camino recorrido.
-
-        Acierto si todas las herramientas de `herramienta_esperada` aparecen en
-        la trayectoria (regla de inclusión). En `detalle` quedan las usadas, las
-        que faltan y si hubo una `read_section` que la pregunta no pedía, que es
-        la llamada cara y la que más mueve la columna de coste.
-        """
+        """El veredicto sobre el camino: acierto si están todas las esperadas."""
         esperadas = pregunta.herramienta_esperada
         if not esperadas:
             return _no_aplica("la pregunta no declara herramienta_esperada")
@@ -475,12 +379,7 @@ class EvaluadorTrayectoria:
         traza: Traza,
         respuesta_correcta: bool,
     ) -> EstadoTrayectoria:
-        """Los tres estados del enunciado.
-
-        `camino_correcto`, `camino_incorrecto_respuesta_correcta` —el que da
-        sentido a toda la práctica— y `camino_incorrecto_respuesta_incorrecta`.
-        `no_aplica` si la pregunta no declara el camino.
-        """
+        """Los tres estados del enunciado; `no_aplica` si no se declara camino."""
         veredicto = self.evaluar(pregunta, traza)
         if veredicto.veredicto == "no_aplica":
             return "no_aplica"
@@ -510,14 +409,7 @@ def es_respuesta_correcta(
 ) -> bool | None:
     """Si la respuesta es correcta, sin mirar todavía el camino.
 
-    * numérica: manda la cifra (el hueco incluido: acertar es no dar cifra);
-    * extractiva: manda la cita;
-    * comparativa: tienen que acertar las dos, porque la pregunta pide la
-      variación Y su explicación, y acertar media pregunta no es acertarla.
-
-    Si un evaluador no aplica, decide el otro. `None` si no aplica ninguno: es
-    el caso de una pregunta ciega que llega sin esquema, y ahí no se inventa un
-    veredicto.
+    Manda la cifra en numéricas, la cita en extractivas y las dos en comparativas.
     """
     aplicables = [v for v in (cita, cifra) if v and v.veredicto != "no_aplica"]
     if not aplicables:

@@ -241,9 +241,7 @@ def tabla_markdown(
     cabeceras = _cabeceras(ks)
     medibles = [f for f in filas if f.pendiente is None]
     # El mejor recall de cada k, para poder remarcarlo en negrita.
-    mejor = {
-        k: max((f.recall.get(k, 0.0) for f in medibles), default=0.0) for k in ks
-    }
+    mejor = {k: max((f.recall.get(k, 0.0) for f in medibles), default=0.0) for k in ks}
 
     lineas = ["| " + " | ".join(cabeceras) + " |"]
     lineas.append("| " + " | ".join("---" for _ in cabeceras) + " |")

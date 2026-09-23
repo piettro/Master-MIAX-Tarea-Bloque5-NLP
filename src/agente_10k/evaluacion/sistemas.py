@@ -1,17 +1,7 @@
-"""Los sistemas que se evalúan: el final y el baseline del profesor. FASE 5.
+"""Los sistemas que se evalúan: el agente final y el baseline del profesor.
 
-`evaluar()` no sabe qué agente está ejecutando. Recibe un `Sistema`: una función
-que toma el texto de una pregunta y devuelve la `RespuestaFinanciera` y la
-`Traza`. Así la tabla baseline contra final sale del MISMO ejecutor con los
-MISMOS evaluadores, y la única diferencia entre las dos filas es el sistema.
-
-* `sistema_final()` es nuestro agente (`agente/constructor.py`, fase 4).
-* `SistemaBaseline` envuelve `miax_s2.baseline()`: el agente del día 10 tal y
-  como lo repartió el profesor en la sesión 2 —las cuatro herramientas de la
-  sesión 1, su system prompt y `create_agent`—, sin límite de llamadas ni
-  guardarraíl. Es el baseline que usa él mismo en la celda de la tabla final
-  de la sesión 2. Su código está en `baseline/miax_s2.py`, copiado sin tocar;
-  lo único que hace este adaptador es traducir su salida a nuestra traza.
+Ambos se exponen como un `Sistema`, para que la tabla salga del mismo ejecutor
+y los mismos evaluadores. `SistemaBaseline` solo adapta la salida de `miax_s2`.
 """
 
 from __future__ import annotations
@@ -32,21 +22,15 @@ from agente_10k.dominio.modelos import (
 Sistema = Callable[[str], tuple[RespuestaFinanciera, Traza]]
 """Una pregunta entra; la respuesta estructurada y su traza salen."""
 
+# Caracteres del resultado de cada herramienta que se guardan en la traza:
+# `read_section` devuelve decenas de miles y `resultados/` acabaría pesando megas.
 RESULTADO_MAXIMO_TRAZA = 2000
-"""Caracteres del resultado de cada herramienta que se guardan en la traza.
-
-`read_section` devuelve decenas de miles de tokens; guardarlos enteros por cada
-pregunta hace que `resultados/` pese megas sin aportar nada a la evaluación,
-que solo necesita el nombre y los argumentos de cada llamada.
-"""
 
 
 def cargar_entorno() -> None:
     """Carga `.env` en `os.environ` sin pisar lo que ya esté exportado.
 
-    `Settings` lee `.env` solo para sus propios campos (`AGENTE10K_*`); las
-    claves de API llevan el nombre canónico de cada SDK y hay que exportarlas.
-    Sin esto, `OPENROUTER_API_KEY` en `.env` no llega nunca al proveedor.
+    `Settings` solo lee de `.env` sus campos `AGENTE10K_*`, no las claves de API.
     """
     from dotenv import load_dotenv
 
@@ -66,10 +50,7 @@ class SistemaBaseline:
     def __init__(self, config: Settings | None = None) -> None:
         """Monta `miax_s2.baseline()` con el mismo modelo que el sistema final.
 
-        Mismo modelo a propósito: la tabla tiene que comparar dos sistemas, no
-        dos modelos. `miax_s2` busca el corpus en `corpus/` o `/content/corpus`
-        (Colab); aquí se le antepone el `dir_corpus` de la configuración, que es
-        cambiar un dato de su módulo, no su código.
+        Mismo modelo a propósito: la tabla compara dos sistemas, no dos modelos.
         """
         from agente_10k.baseline import miax_s2
 
@@ -120,10 +101,7 @@ class SistemaBaseline:
     def _uso(self, mensajes: Sequence[Any]) -> UsoTokens:
         """Tokens de los metadatos de uso; coste del proveedor o, si no, tarifa.
 
-        El coste se lee del proveedor cuando lo reporta. Si no lo reporta, se
-        calcula con la tabla de precios del propio profesor
-        (`miax_s2.PRECIOS_OPENROUTER`) y queda anotado en `origen_coste`, para
-        que nadie compare un coste leído con uno estimado sin saberlo.
+        Cuál de los dos fue queda anotado en `origen_coste`.
         """
         uso = uso_de_mensajes(mensajes)
         if uso.coste_usd is not None:
@@ -142,16 +120,15 @@ class SistemaBaseline:
 # Traducción de los mensajes de LangChain. Funciones puras: se prueban sin red.
 # ---------------------------------------------------------------------------
 
+# La salida estructurada llega como una `tool_call` más, pero no es del agente
+# y no entra en la trayectoria.
 NOMBRE_ESQUEMA = RespuestaFinanciera.__name__
-"""Con salida estructurada por herramienta, el esquema aparece como una
-`tool_call` más. No es una herramienta del agente y no entra en la trayectoria."""
 
 
 def llamadas_de_mensajes(mensajes: Sequence[Any]) -> list[LlamadaHerramienta]:
     """Las llamadas a herramienta, emparejadas con su resultado por `tool_call_id`.
 
-    El emparejamiento por identificador es lo único fiable cuando el modelo
-    pide varias herramientas en el mismo turno.
+    Por identificador y no por orden: el modelo puede pedir varias en un turno.
     """
     resultados = {
         getattr(m, "tool_call_id", None): str(getattr(m, "content", ""))
@@ -177,8 +154,7 @@ def llamadas_de_mensajes(mensajes: Sequence[Any]) -> list[LlamadaHerramienta]:
 def _coste_reportado(mensaje: object) -> float | None:
     """El coste que el proveedor puso en los metadatos del mensaje, si lo puso.
 
-    OpenRouter lo devuelve dentro del bloque de uso; según la versión del
-    adaptador de LangChain acaba en `token_usage` o en `usage`.
+    Según la versión del adaptador de LangChain cae en `token_usage` o en `usage`.
     """
     metadatos = getattr(mensaje, "response_metadata", None) or {}
     for clave in ("token_usage", "usage"):
@@ -206,9 +182,7 @@ def uso_de_mensajes(mensajes: Sequence[Any]) -> UsoTokens:
 def respuesta_de(estructurada: object, mensajes: Sequence[Any]) -> RespuestaFinanciera:
     """La `RespuestaFinanciera` del agente, o una de `fuente="ninguna"` si no hay.
 
-    Si el modelo no llegó a producir salida estructurada, no se inventa nada: se
-    guarda el último texto como prosa y el motivo, y los evaluadores lo tratan
-    como lo que es.
+    Sin salida estructurada se guarda el último texto como prosa, sin inventar nada.
     """
     if estructurada is not None:
         datos = (

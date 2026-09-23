@@ -1,17 +1,10 @@
-"""Ayuda para escribir preguntas del golden set sin transcribir nada a mano.
-
-Las dos causas que más preguntas invalidan son un `ancla_texto` escrito de
-memoria y una `cifra_esperada` leída del texto en lugar de XBRL. Este script
-saca las dos cosas del corpus, de modo que lo que se pega en el JSONL es
-literal por construcción.
+"""Saca del corpus el `ancla_texto` y la `cifra_esperada` de una pregunta.
 
     python golden/asistente_preguntas.py xbrl AMZN 2025
     python golden/asistente_preguntas.py buscar MSFT 2025 7 "net income"
     python golden/asistente_preguntas.py ancla MSFT 2025 7 "Net income increased ..."
 
-`ancla` imprime los cuatro campos listos para el JSONL: `item_esperado`,
-`ancla_texto`, `ancla_inicio` y `ancla_fin`. Los offsets son la posición de la
-frase en el texto de `secciones.jsonl`, igual que en el golden set oficial.
+`ancla` imprime `item_esperado`, `ancla_texto`, `ancla_inicio` y `ancla_fin`.
 """
 
 from __future__ import annotations

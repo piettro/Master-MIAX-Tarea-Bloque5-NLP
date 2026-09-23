@@ -134,4 +134,4 @@ class RecuperadorLexico:
         pregunta no casaría con "60,922" en el fragmento y se perdería la única
         ventaja que BM25 tiene sobre el denso.
         """
-        return self._bm25.get_scores(tokenizar(consulta))
+        return list(self._bm25.get_scores(tokenizar(consulta)))

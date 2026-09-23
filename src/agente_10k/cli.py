@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import typer
 
@@ -20,6 +20,7 @@ from agente_10k.config import RAIZ_REPO, settings
 
 if TYPE_CHECKING:
     from agente_10k.dominio.modelos import ResultadoPregunta
+    from agente_10k.dominio.protocolos import ProveedorLLM
 
 RUTA_GOLDEN_POR_DEFECTO = typer.Argument(Path("golden/golden_set.jsonl"))
 
@@ -222,12 +223,12 @@ def ablacion(
 
     # El proveedor solo hace falta para la fila de la reescritura; si no hay
     # clave, se mide el resto y esa fila queda pendiente, sin abortar.
-    proveedor = None
+    proveedor: ProveedorLLM | None = None
     if cfg.hay_clave():
         try:
             from agente_10k.agente.proveedores import construir_proveedor
 
-            proveedor = construir_proveedor(cfg)  # type: ignore[assignment]
+            proveedor = cast("ProveedorLLM", construir_proveedor(cfg))
         except NotImplementedError:
             proveedor = None  # fase 4 aún sin implementar
 

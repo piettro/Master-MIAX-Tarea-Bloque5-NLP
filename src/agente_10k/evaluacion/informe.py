@@ -1,21 +1,6 @@
-"""Genera las tablas del informe. FASE 5 — Raúl.
+"""Tablas del informe en markdown y csv, leídas de `resultados/`.
 
-Ninguna cifra del PDF se escribe a mano. Si no sale de `make informe`, no entra.
-Estas funciones leen `resultados/` y escriben markdown y csv; el PDF los incluye.
-
-La tabla principal:
-
-    sistema  | extractiva | numérica | comparativa | hueco | total | recall@5 |
-             | coste medio | latencia media | tool calls/pregunta
-    baseline |
-    final    |
-
-con el mejor valor de cada columna REMARCADO. Coste y latencia son COLUMNAS, no
-una nota al pie: es una indicación explícita del enunciado.
-
-Cuidado con «el mejor valor»: en coste, en latencia y en llamadas por pregunta,
-mejor es MENOR. Remarcar el máximo en esas tres columnas es el error de bulto
-que convierte la tabla en un argumento en contra.
+Ninguna cifra se escribe a mano: si no sale de `make informe`, no entra.
 """
 
 from __future__ import annotations
@@ -30,7 +15,6 @@ from agente_10k.dominio.modelos import InformeEvaluacion, ResultadoPregunta
 COLUMNAS_MENOR_ES_MEJOR = frozenset(
     {"coste medio", "latencia media", "tool calls/pregunta"}
 )
-"""Las columnas en las que el mejor valor es el más bajo."""
 
 COLUMNAS_PRINCIPAL: tuple[str, ...] = (
     "extractiva",
@@ -208,7 +192,7 @@ def tabla_guardarrail(informe: InformeEvaluacion) -> str:
 
 
 def tabla_por_pregunta(informe: InformeEvaluacion) -> str:
-    """Una fila por pregunta: la que se enseña para explicar un fallo concreto."""
+    """Una fila por pregunta, con la causa del fallo si lo hubo."""
     filas = []
     for r in informe.resultados:
         camino = " > ".join(r.traza.trayectoria) if r.traza else "—"
@@ -242,11 +226,7 @@ def tabla_recall(informe: InformeEvaluacion) -> str:
 
 
 def tabla_delta(referencia: InformeEvaluacion, ciegas: InformeEvaluacion) -> str:
-    """Las preguntas ciegas contra el golden set propio, familia a familia.
-
-    Si baja, esa es la diapositiva: qué parte de la mejora era general y qué
-    parte memoria del conjunto con el que se iteró.
-    """
+    """Las preguntas ciegas contra el golden set propio, familia a familia."""
     filas = []
     for columna, clave in _CLAVE_FAMILIA.items():
         a = referencia.metricas.aciertos_por_familia.get(clave)
@@ -307,14 +287,9 @@ def _csv_principal(informes: Sequence[InformeEvaluacion], destino: Path) -> None
 
 
 def generar_todo(dir_resultados: Path, destino: Path) -> list[Path]:
-    """Regenera todas las tablas desde `resultados/`. Es `make informe`.
+    """Regenera todas las tablas desde `resultados/` y devuelve lo escrito.
 
-    Lee el `informe.json` de cada subcarpeta. Escribe la tabla principal si
-    están `baseline` y `final`, y el delta de las ciegas si están `ciegas` y
-    `final`. Lo que no esté, no se inventa.
-
-    Returns:
-        Las rutas de los ficheros escritos, markdown y csv.
+    La tabla principal y el delta de ciegas solo salen si están sus informes.
     """
     informes = {
         ruta.parent.name: cargar_informe(ruta)

@@ -1,17 +1,7 @@
-"""`evaluar(ruta_jsonl)`. CONTRATO C5. FASE 5 — Raúl.
+"""`evaluar(ruta_jsonl)`: ejecuta un sistema sobre un JSONL y lo evalúa. CONTRATO C5.
 
-El día 24 llegan diez preguntas que no ha visto nadie, se ejecutan en clase
-contra el repositorio YA entregado y el resultado entra en la presentación.
-Tres reglas que salen de ahí y que gobiernan este módulo:
-
-1. **Los campos que no estén se degradan, no abortan.** Si las diez preguntas
-   llegan con solo `id` y `pregunta`, `evaluar()` tiene que correr igual y
-   marcar como `no_aplica` los evaluadores que no pueda aplicar.
-2. **Una pregunta que lanza excepción se marca como fallo y la ejecución
-   continúa.** Que la séptima rompa no puede impedir ver las otras nueve.
-3. **Ninguna pregunta puede colgar la sesión.** Hay veinte minutos para diez
-   preguntas: cada una tiene un tiempo máximo y, si lo agota, se marca como
-   fallo y se pasa a la siguiente.
+Los campos que falten degradan a `no_aplica`; una pregunta que falla o agota su
+tiempo se marca como fallo y la ejecución continúa.
 """
 
 from __future__ import annotations
@@ -44,36 +34,15 @@ from agente_10k.evaluacion.evaluadores import (
 from agente_10k.evaluacion.metricas import agregar, medir_recall
 from agente_10k.evaluacion.sistemas import Sistema, cargar_entorno, sistema_final
 
+# Segundos por pregunta antes de darla por fallida; una normal tarda 3-30 s.
 TIEMPO_MAXIMO_S = 180.0
-"""Segundos por pregunta antes de darla por fallida.
-
-Una pregunta normal tarda entre 3 y 30 segundos. Tres minutos solo se agotan si
-el agente entró en bucle o el proveedor no contesta, y en los dos casos esperar
-más no la va a arreglar y sí se come el tiempo de las otras nueve.
-"""
 
 Progreso = Callable[[int, int, ResultadoPregunta], None]
 """`(n, total, resultado)`: lo que el CLI imprime tras cada pregunta."""
 
 
 def leer_preguntas(ruta: str | Path) -> list[Pregunta]:
-    """Lee un JSONL de preguntas tolerando todo lo que falte menos el texto.
-
-    Solo `id` y `pregunta` son obligatorios. El resto se rellena con `None` y
-    los evaluadores que necesiten un campo ausente devolverán `no_aplica`.
-
-    Args:
-        ruta: El fichero JSONL.
-
-    Returns:
-        Las preguntas leídas, en el orden del fichero.
-
-    Raises:
-        FileNotFoundError: Si el fichero no existe.
-        ValueError: Si una línea no es JSON válido o le falta `pregunta`. Se
-            señala con el número de línea: un fichero mal formado el día 24 se
-            arregla en veinte segundos si el error dice dónde.
-    """
+    """Lee un JSONL de preguntas; solo `id` y `pregunta` son obligatorios."""
     camino = Path(ruta)
     if not camino.is_file():
         raise FileNotFoundError(f"No existe el fichero de preguntas: {camino}")
@@ -95,12 +64,7 @@ def leer_preguntas(ruta: str | Path) -> list[Pregunta]:
 
 
 def etiqueta_por_defecto(ruta: str | Path) -> str:
-    """`ciegas` si el fichero es el de las preguntas ciegas; si no, `final`.
-
-    El día 24 se ejecuta `evaluar("resultados/ciegas/preguntas.jsonl")` o
-    `evaluar("holdout.jsonl")` sin más argumentos, y el resultado no puede ir a
-    pisar `resultados/final/`, que es la mitad de la tabla del informe.
-    """
+    """`ciegas` si el fichero es el de las preguntas ciegas; si no, `final`."""
     texto = Path(ruta).as_posix().lower()
     return "ciegas" if "ciega" in texto or "holdout" in texto else "final"
 
@@ -148,12 +112,7 @@ class _Evaluadores:
 
 
 def _sin_sistema(motivo: str) -> Sistema:
-    """Un sistema que falla siempre con `motivo`.
-
-    Si el agente no se puede construir —falta la clave, falta una pieza de la
-    fase 4—, cada pregunta se marca como fallo con ese motivo en lugar de que
-    `evaluar()` explote antes de empezar sin dejar nada escrito.
-    """
+    """Un sistema que falla siempre con `motivo`, para no abortar antes de empezar."""
 
     def responder(_: str) -> tuple[RespuestaFinanciera, Traza]:
         raise RuntimeError(motivo)
@@ -166,8 +125,7 @@ def _ejecutar_con_limite(
 ) -> tuple[RespuestaFinanciera, Traza]:
     """Llama al sistema y deja de esperarle si agota el tiempo.
 
-    El hilo no se puede matar desde fuera; se abandona. Si el agente estaba en
-    bucle seguirá gastando hasta su propio límite, pero la evaluación sigue.
+    El hilo no se puede matar desde fuera: se abandona y sigue gastando solo.
     """
     ejecutor = ThreadPoolExecutor(max_workers=1)
     futuro = ejecutor.submit(sistema, pregunta)
@@ -184,12 +142,7 @@ def _ejecutar_con_limite(
 def _medir_recall(
     preguntas: Sequence[Pregunta], corpus: Corpus | None, cfg: Settings
 ) -> tuple[dict[int, float], dict[str, int | None], str | None]:
-    """El recall@k del pipeline de retrieval de la configuración.
-
-    Degrada a vacío con un aviso si no se puede construir el recuperador (sin
-    corpus, sin modelo de embeddings, mejora de la fase 3 aún sin hacer): el
-    recall es una columna, no una condición para evaluar las respuestas.
-    """
+    """El recall@k del retrieval, o vacío con un aviso si no se puede medir."""
     if corpus is None or not any(p.ancla_texto for p in preguntas):
         return {}, {}, None
     try:
@@ -233,24 +186,7 @@ def evaluar(
 ) -> InformeEvaluacion:
     """Ejecuta el sistema sobre un JSONL de preguntas y lo evalúa. CONTRATO C5.
 
-    Para cada pregunta: llama al sistema, aplica los tres evaluadores, agrega y
-    escribe el detalle y el resumen a `resultados/<etiqueta>/`.
-
-    Args:
-        ruta_jsonl: El fichero de preguntas. Solo `id` y `pregunta` son
-            obligatorios.
-        etiqueta: Subcarpeta de `resultados/`. Por defecto `final`, o `ciegas`
-            si la ruta es la de las preguntas ciegas.
-        escribir: Si se vuelca el resultado a disco.
-        sistema: Qué se evalúa. Por defecto, nuestro agente; el baseline es
-            `sistemas.SistemaBaseline()`.
-        config: La configuración; por defecto, la del proceso.
-        medir_retrieval: Si se mide el recall@k del pipeline de retrieval.
-        tiempo_maximo_s: Límite por pregunta. Ver `TIEMPO_MAXIMO_S`.
-        progreso: Se llama tras cada pregunta, para ir viendo el avance.
-
-    Returns:
-        El informe completo, con detalle por pregunta y métricas agregadas.
+    Con `escribir`, vuelca el detalle y el resumen a `resultados/<etiqueta>/`.
     """
     cargar_entorno()
     cfg = config or settings()
@@ -280,7 +216,7 @@ def evaluar(
                 sistema, pregunta.pregunta, tiempo_maximo_s
             )
             resultado = evaluadores.aplicar(pregunta, respuesta, traza)
-        except Exception as exc:  # regla 2 del módulo
+        except Exception as exc:  # una pregunta rota no puede parar el resto
             resultado = ResultadoPregunta(
                 pregunta_id=pregunta.id,
                 familia=pregunta.familia,
@@ -359,14 +295,9 @@ def fila_plana(resultado: ResultadoPregunta) -> dict[str, object]:
 
 
 def guardar(informe: InformeEvaluacion, destino: Path) -> None:
-    """Vuelca el informe a `resultados/<etiqueta>/`.
+    """Vuelca el informe a `destino`.
 
-    * `informe.json` — el `InformeEvaluacion` entero. Es lo que lee
-      `make informe` para regenerar las tablas: ninguna cifra se copia a mano.
-    * `meta.json` — fecha, modelo, commit y configuración, para saber qué se
-      ejecutó sin abrir el informe entero.
-    * `detalle.csv` — una fila por pregunta, legible en una hoja de cálculo.
-    * `resumen.md` — las tablas de este sistema.
+    Escribe `informe.json`, `meta.json`, `detalle.csv` y `resumen.md`.
     """
     from agente_10k.evaluacion.informe import tablas_de_sistema
 
