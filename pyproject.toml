@@ -51,6 +51,7 @@ dev = [
 ]
 # Proveedores alternativos del CONTRATO C5/P5. No se instalan por defecto:
 # el evaluador externo solo necesita el proveedor que este en LLM_PROVIDER.
+informe = ["markdown-it-py>=3.0"]
 anthropic = ["langchain-anthropic>=1.0"]
 google = ["langchain-google-genai>=2.0"]
 openai = ["langchain-openai>=1.0"]

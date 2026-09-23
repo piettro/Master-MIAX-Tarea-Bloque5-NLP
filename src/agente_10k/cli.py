@@ -249,12 +249,31 @@ def ablacion(
 
 
 @app.command()
-def informe() -> None:
+def informe(
+    pdf: bool = typer.Option(False, help="Montar además el informe en PDF"),
+) -> None:
     """Regenera todas las tablas del informe desde resultados/. FASE 5."""
     from agente_10k.evaluacion.informe import generar_todo
 
     cfg = settings()
-    escritos = generar_todo(cfg.dir_resultados, RAIZ_REPO / "docs" / "informe")
+    destino = RAIZ_REPO / "docs" / "informe"
+    escritos = generar_todo(cfg.dir_resultados, destino)
+    if pdf:
+        from agente_10k.evaluacion.documento import generar
+
+        plantilla = destino / "plantilla.md"
+        if not plantilla.is_file():
+            print(f"No hay plantilla en {plantilla}.")
+            raise typer.Exit(1)
+        montados = generar(
+            plantilla,
+            RAIZ_REPO,
+            destino,
+            "Un agente investigador sobre informes 10-K",
+        )
+        escritos += montados
+        if not any(r.suffix == ".pdf" for r in montados):
+            print("Sin Edge ni Chrome: queda el HTML, imprímelo desde el navegador.")
     for ruta in escritos:
         print(f"escrito {ruta}")
 
