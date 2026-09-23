@@ -753,7 +753,36 @@ error de ejecución.</p>
 <p>Si el delta baja, la parte de la mejora que era memoria del conjunto con el que
 iteramos se ve aquí. Es un hallazgo, no un suspenso: lo que no se puede hacer es
 no medirlo.</p>
-<h2>7. Reproducir esto</h2>
+<h2>7. Qué se probó y no funcionó</h2>
+<p>El enunciado pide esto explícitamente, y es la parte más barata de escribir y la
+más cara de callarse:</p>
+<ul>
+<li><strong>BM25 en el híbrido.</strong> La fusión RRF de denso y léxico no mejora al denso con
+filtro de metadatos en nuestro golden set. La intuición era que los números y
+los nombres propios (&quot;Item 7A&quot;, &quot;60,922&quot;) le vendrían bien al léxico; el
+tokenizador los conserva (ADR-013) y aun así no movió la métrica.</li>
+<li><strong>Reordenar sin traducir.</strong> El cross-encoder sobre la consulta en español
+empeora el recall. No es que el modelo sea malo: es que está entrenado en
+inglés y se le estaba dando otra cosa.</li>
+<li><strong>Reordenar puro con el agente leyendo cinco fragmentos.</strong> Sube el recall@1,
+que es la métrica bonita, y baja el recall@10, que es la que se lleva el
+agente cuando pide más contexto. Por eso la configuración recomendada es la
+fusionada y no la que gana la columna más vistosa.</li>
+</ul>
+<h2>8. Coste y latencia</h2>
+<p>Las dos columnas están en todas las tablas y no en una nota al pie, que es lo
+que pide el enunciado. Dos advertencias sobre cómo se calculan:</p>
+<ul>
+<li><strong>El coste se LEE de los metadatos del proveedor cuando viene.</strong> OpenRouter no
+siempre lo manda; cuando falta, se estima con la tarifa de
+<code>miax_s2.PRECIOS_OPENROUTER</code> y la orden dice cuál de las dos cosas fue. No hay
+ninguna cifra de coste inventada.</li>
+<li><strong>La reescritura de la consulta se cobra aunque la sirva la caché.</strong> La caché
+existe para que la tabla sea reproducible, no para que la técnica parezca
+gratis: cada acierto de caché vuelve a sumar el coste y la latencia de la
+llamada original.</li>
+</ul>
+<h2>9. Reproducir esto</h2>
 <pre><code class="language-bash">pip install -e &quot;.[dev,informe]&quot;
 # descomprimir corpus_miax_2026.zip e indice_faiss.zip en data/corpus/
 agente-10k diagnostico       # qué hay y qué falta

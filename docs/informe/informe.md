@@ -279,7 +279,38 @@ Si el delta baja, la parte de la mejora que era memoria del conjunto con el que
 iteramos se ve aquí. Es un hallazgo, no un suspenso: lo que no se puede hacer es
 no medirlo.
 
-## 7. Reproducir esto
+## 7. Qué se probó y no funcionó
+
+El enunciado pide esto explícitamente, y es la parte más barata de escribir y la
+más cara de callarse:
+
+- **BM25 en el híbrido.** La fusión RRF de denso y léxico no mejora al denso con
+  filtro de metadatos en nuestro golden set. La intuición era que los números y
+  los nombres propios ("Item 7A", "60,922") le vendrían bien al léxico; el
+  tokenizador los conserva (ADR-013) y aun así no movió la métrica.
+- **Reordenar sin traducir.** El cross-encoder sobre la consulta en español
+  empeora el recall. No es que el modelo sea malo: es que está entrenado en
+  inglés y se le estaba dando otra cosa.
+- **Reordenar puro con el agente leyendo cinco fragmentos.** Sube el recall@1,
+  que es la métrica bonita, y baja el recall@10, que es la que se lleva el
+  agente cuando pide más contexto. Por eso la configuración recomendada es la
+  fusionada y no la que gana la columna más vistosa.
+
+## 8. Coste y latencia
+
+Las dos columnas están en todas las tablas y no en una nota al pie, que es lo
+que pide el enunciado. Dos advertencias sobre cómo se calculan:
+
+- **El coste se LEE de los metadatos del proveedor cuando viene.** OpenRouter no
+  siempre lo manda; cuando falta, se estima con la tarifa de
+  `miax_s2.PRECIOS_OPENROUTER` y la orden dice cuál de las dos cosas fue. No hay
+  ninguna cifra de coste inventada.
+- **La reescritura de la consulta se cobra aunque la sirva la caché.** La caché
+  existe para que la tabla sea reproducible, no para que la técnica parezca
+  gratis: cada acierto de caché vuelve a sumar el coste y la latencia de la
+  llamada original.
+
+## 9. Reproducir esto
 
 ```bash
 pip install -e ".[dev,informe]"
