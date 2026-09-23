@@ -6,7 +6,7 @@ en cuanto se re-trocea el corpus. Acierto = respuesta correcta Y camino correcto
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from statistics import fmean
 
 from agente_10k.corpus.normalizacion import contiene
@@ -99,6 +99,17 @@ def medir_recall(
     return recall, puestos
 
 
+def mrr(puestos: Mapping[str, int | None]) -> float:
+    """Mean reciprocal rank del ancla. Las preguntas sin ancla no entran."""
+    if not puestos:
+        return 0.0
+    return fmean([1 / p if p else 0.0 for p in puestos.values()])
+
+
+def _abstuvo(resultado: ResultadoPregunta) -> bool:
+    return resultado.respuesta is not None and resultado.respuesta.fuente == "ninguna"
+
+
 def _media(valores: Sequence[float]) -> float | None:
     return fmean(valores) if valores else None
 
@@ -110,6 +121,7 @@ def _proporcion(aciertos: Sequence[bool]) -> float:
 def agregar(
     resultados: Sequence[ResultadoPregunta],
     recall: dict[int, float] | None = None,
+    puestos: Mapping[str, int | None] | None = None,
 ) -> Metricas:
     """Las métricas agregadas de una ejecución: las columnas del informe.
 
@@ -123,10 +135,14 @@ def agregar(
     intervenidas = [
         r for r in resultados if r.traza and r.traza.intervenciones_guardarrail
     ]
+    con_dato = [r for r in resultados if not r.es_hueco and not r.error]
+    proporciones, cuentas = aciertos_por_familia(resultados)
     return Metricas(
         n_preguntas=len(resultados),
-        aciertos_por_familia=aciertos_por_familia(resultados),
+        aciertos_por_familia=proporciones,
+        n_por_familia=cuentas,
         recall_at_k=dict(recall or {}),
+        mrr=mrr(puestos or {}),
         coste_medio_usd=_media(costes),
         latencia_media_s=_media([t.latencia_s for t in trazas]) or 0.0,
         llamadas_por_pregunta=_media([float(t.n_llamadas) for t in trazas]) or 0.0,
@@ -141,13 +157,14 @@ def agregar(
             [bool(r.respuesta_correcta) for r in intervenidas]
         ),
         alucinaciones_sobre_hueco=sum(r.alucinacion_sobre_hueco for r in resultados),
+        tasa_abstencion_indebida=_proporcion([_abstuvo(r) for r in con_dato]),
     )
 
 
 def aciertos_por_familia(
     resultados: Sequence[ResultadoPregunta],
-) -> dict[str, float]:
-    """Proporción de aciertos en cada familia, más la de hueco y el total.
+) -> tuple[dict[str, float], dict[str, int]]:
+    """Proporción y número de preguntas de cada familia, más hueco y total.
 
     Una pregunta sin veredicto posible (`acierto=None`) no entra en el denominador.
     """
@@ -161,4 +178,5 @@ def aciertos_por_familia(
             claves.append("hueco")
         for clave in claves:
             grupos.setdefault(clave, []).append(acierto)
-    return {clave: _proporcion(valores) for clave, valores in grupos.items()}
+    proporciones = {clave: _proporcion(valores) for clave, valores in grupos.items()}
+    return proporciones, {clave: len(valores) for clave, valores in grupos.items()}

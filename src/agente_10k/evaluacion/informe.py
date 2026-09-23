@@ -11,6 +11,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from agente_10k.dominio.modelos import InformeEvaluacion, ResultadoPregunta
+from agente_10k.evaluacion.estadistica import Intervalo, mcnemar, wilson
 
 COLUMNAS_MENOR_ES_MEJOR = frozenset(
     {"coste medio", "latencia media", "tool calls/pregunta"}
@@ -187,6 +188,10 @@ def tabla_guardarrail(informe: InformeEvaluacion) -> str:
         ],
         ["preguntas que agotaron el límite de llamadas", str(limite)],
         ["alucinaciones sobre hueco", str(m.alucinaciones_sobre_hueco)],
+        [
+            "abstenciones indebidas (dijo «no hay dato» y sí lo había)",
+            _porcentaje(m.tasa_abstencion_indebida),
+        ],
     ]
     return _markdown(["guardarraíl", "valor"], filas)
 
@@ -216,13 +221,58 @@ def tabla_recall(informe: InformeEvaluacion) -> str:
     recall = informe.metricas.recall_at_k
     if not recall:
         return "Sin recall@k medido en esta ejecución.\n"
-    cabecera = [f"recall@{k}" for k in sorted(recall)]
-    tabla = _markdown(cabecera, [[_porcentaje(recall[k]) for k in sorted(recall)]])
+    ks = sorted(recall)
+    cabecera = [f"recall@{k}" for k in ks] + ["MRR"]
+    valores = [_porcentaje(recall[k]) for k in ks] + [f"{informe.metricas.mrr:.2f}"]
+    tabla = _markdown(cabecera, [valores])
     puestos = informe.configuracion.get("puesto_del_ancla")
     if isinstance(puestos, dict) and puestos:
         filas = [[str(pid), str(p) if p else "> 10"] for pid, p in puestos.items()]
         tabla += "\n" + _markdown(["pregunta", "puesto del ancla"], filas)
     return tabla
+
+
+def _aciertos(informe: InformeEvaluacion) -> dict[str, bool]:
+    """Acierto de cada pregunta, por id. Un error cuenta como fallo."""
+    return {r.pregunta_id: bool(r.acierto) and not r.error for r in informe.resultados}
+
+
+def _intervalo_total(informe: InformeEvaluacion) -> tuple[int, int, Intervalo]:
+    m = informe.metricas
+    n = m.n_por_familia.get("total", m.n_preguntas)
+    aciertos = round(m.aciertos_por_familia.get("total", 0.0) * n)
+    return aciertos, n, wilson(aciertos, n)
+
+
+def tabla_significancia(a: InformeEvaluacion, b: InformeEvaluacion) -> str:
+    """Si la mejora de `b` sobre `a` aguanta un contraste, o es ruido.
+
+    Wilson para el intervalo de cada sistema y McNemar exacto para la
+    diferencia, que es lo que toca con datos pareados.
+    """
+    comunes = sorted(set(_aciertos(a)) & set(_aciertos(b)))
+    if not comunes:
+        return "Los dos sistemas no comparten ninguna pregunta: no hay contraste.\n"
+    filas = []
+    for informe in (a, b):
+        aciertos, n, intervalo = _intervalo_total(informe)
+        filas.append([informe.etiqueta, f"{aciertos}/{n}", str(intervalo)])
+    tabla = _markdown(["sistema", "aciertos", "IC 95 % (Wilson)"], filas)
+
+    prueba = mcnemar(
+        [_aciertos(a)[i] for i in comunes], [_aciertos(b)[i] for i in comunes]
+    )
+    veredicto = (
+        "la diferencia es significativa"
+        if prueba.significativa()
+        else "no se puede descartar que sea ruido"
+    )
+    return (
+        tabla + f"\nMcNemar exacto sobre las {len(comunes)} preguntas comunes: "
+        f"{a.etiqueta} acierta y {b.etiqueta} falla en {prueba.solo_a}; "
+        f"al revés, {prueba.solo_b}. p = {prueba.p_valor:.3f}, {veredicto} "
+        "al 5 %.\n"
+    )
 
 
 def tabla_delta(referencia: InformeEvaluacion, ciegas: InformeEvaluacion) -> str:
@@ -256,6 +306,9 @@ def tablas_de_sistema(informe: InformeEvaluacion) -> str:
         f"- commit: {informe.commit or '?'}\n"
         f"- preguntas: {m.n_preguntas} ({informe.ruta_preguntas})\n"
     )
+    aciertos, n, intervalo = _intervalo_total(informe)
+    if n:
+        cabecera += f"- acierto total: {aciertos}/{n}, IC 95 % {intervalo}\n"
     if isinstance(avisos, list) and avisos:
         cabecera += "".join(f"- AVISO: {a}\n" for a in avisos)
     partes = [
@@ -308,6 +361,7 @@ def generar_todo(dir_resultados: Path, destino: Path) -> list[Path]:
     if "baseline" in informes and "final" in informes:
         comparados = [informes["baseline"], informes["final"]]
         escribir("tabla_principal.md", tabla_comparada(comparados))
+        escribir("significancia.md", tabla_significancia(*comparados))
         _csv_principal(comparados, destino / "tabla_principal.csv")
         escritos.append(destino / "tabla_principal.csv")
     if "ciegas" in informes and "final" in informes:

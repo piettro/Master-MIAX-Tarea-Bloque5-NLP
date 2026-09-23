@@ -253,7 +253,7 @@ def evaluar(
         commit=_commit(),
         configuracion=configuracion,
         resultados=resultados,
-        metricas=agregar(resultados, recall),
+        metricas=agregar(resultados, recall, puestos),
     )
     if escribir:
         guardar(informe, cfg.dir_resultados / etiqueta)
