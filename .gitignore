@@ -60,14 +60,16 @@ data/*.zip
 # Secciones reconstruidas desde los chunks: son un derivado, se regeneran con
 # `make reconstruir-secciones` (ADR-004).
 data/derivado/
-class_transcription/*
 
 # ---------------------------------------------------------------------------
-# Material de clase. PIPELINE.md exige que las transcripciones y el enunciado
-# viajen DENTRO del repositorio, así que no se ignoran (ADR-001).
-# `materials/` sí se ignora: son los ZIP y .docx originales del aula virtual.
+# Material de clase. Se queda en local y NO se publica: las transcripciones y
+# los notebooks del profesor no son nuestros y no pintan nada en el entregable
+# (ADR-020). El enunciado sí viaja, en docs/enunciado.md, porque el repo tiene
+# que poder leerse sin el aula virtual delante.
 # ---------------------------------------------------------------------------
 materials/
+class_transcription/
+notebooks/
 
 # ---------------------------------------------------------------------------
 # resultados/ NO se ignora: baseline y final son entregables del enunciado y

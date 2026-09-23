@@ -31,6 +31,9 @@ enunciado y las clases sin pedir nada. A cambio, hay una conversión `.docx →
 .md` que no se regenera automáticamente; si el profesor publica una corrección,
 hay que rehacerla a mano.
 
+**Revisada por ADR-020**: las transcripciones y los notebooks salen del
+repositorio. El enunciado se queda.
+
 ---
 
 ## ADR-002 · Versiones fijadas, no rangos
@@ -433,6 +436,45 @@ proporciones independientes tiraría esa información.
 **Consecuencia.** El informe puede decir qué mejoras aguantan un contraste y
 cuáles no, que con estos tamaños es casi siempre la respuesta honesta. `Metricas`
 guarda `n_por_familia` porque un intervalo necesita denominador.
+
+---
+
+## ADR-020 · El material del profesor se queda en local
+
+**Contexto.** ADR-001 metió las transcripciones de clase y el notebook del
+profesor dentro del repositorio para que fuera autocontenido. El entregable es
+público y ese material no es nuestro: son grabaciones de sus clases y su
+notebook, un megabyte de texto que además no aporta nada a quien evalúe la
+práctica.
+
+**Opciones.** (a) Dejarlo. (b) Sacarlo del control de versiones y conservarlo
+en local. (c) Reescribir la historia para que no quede rastro.
+
+**Decisión.** (b). `class_transcription/` y `notebooks/` pasan al `.gitignore`
+y se dejan de versionar; los ficheros siguen en el disco de cada uno. No se
+reescribe la historia: los commits viejos siguen conteniéndolos, y limpiar eso
+del todo obligaría a reescribir todas las ramas del grupo.
+
+**Consecuencia.** `docs/enunciado.md` se queda —es la única pieza de clase que
+el repositorio necesita para leerse solo— y el test que exigía las
+transcripciones pasa a exigir lo contrario: que no estén versionadas.
+
+---
+
+## ADR-021 · Los ficheros del golden set no llevan nombres de persona
+
+**Contexto.** Las preguntas se escribían en `parciales/<nombre>.jsonl`, uno por
+autor, para no pisarse en un JSONL donde git no sabe fusionar. Acabó habiendo
+un solo fichero, con el nombre de uno de los tres, en un trabajo de equipo.
+
+**Decisión.** El parcial se llama `parciales/preguntas.jsonl` y el campo
+`autor` de las veinte preguntas dice `equipo`. El mecanismo de fusión no
+cambia: `fusionar_parciales` recorre el directorio, y si hiciera falta volver a
+repartirse el trabajo basta con añadir otro fichero.
+
+**Consecuencia.** El campo `autor` deja de servir para auditar quién escribió
+cada pregunta. A cambio, el entregable no lleva el nombre de nadie en la ruta
+de un fichero.
 
 ---
 

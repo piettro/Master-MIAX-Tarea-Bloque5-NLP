@@ -6,15 +6,10 @@ XBRL**. CONTRATO C4.
 
 ## Cómo se escribe sin pisarse
 
-Cada autor escribe **en su propio fichero**, con su rango de ids:
+Las preguntas se escriben en `parciales/`, un fichero por tanda, y de ahí se
+fusionan. Las veinte que hay salieron de `parciales/preguntas.jsonl`.
 
-| Autor | Fichero | Ids |
-| --- | --- | --- |
-| Piettro | `parciales/piettro.jsonl` | `g-p-001` … `g-p-007` |
-| Alonso | `parciales/alonso.jsonl` | `g-a-001` … `g-a-007` |
-| Raúl | `parciales/raul.jsonl` | `g-r-001` … `g-r-006` |
-
-Raúl los fusiona en `golden_set.jsonl`:
+La fusión:
 
 ```python
 from pathlib import Path

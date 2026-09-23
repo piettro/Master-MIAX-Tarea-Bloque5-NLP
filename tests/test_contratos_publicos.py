@@ -191,11 +191,20 @@ class TestBaselineCongelado:
 
 class TestOrganizacionDelRepo:
     def test_el_enunciado_viaja_dentro_del_repo(self):
-        """PIPELINE.md lo exige: el repo tiene que ser autocontenido."""
+        """El repo tiene que leerse sin el aula virtual delante."""
         assert (RAIZ / "docs/enunciado.md").is_file()
 
-    def test_las_transcripciones_viajan_dentro_del_repo(self):
-        assert list((RAIZ / "class_transcription").glob("*.txt"))
+    def test_el_material_de_clase_no_se_publica(self):
+        """ADR-020: las transcripciones y los notebooks del profesor no son
+        nuestros y se quedan en local."""
+        import subprocess
+
+        versionados = subprocess.check_output(
+            ["git", "ls-files", "class_transcription", "notebooks"],
+            cwd=RAIZ,
+            text=True,
+        )
+        assert versionados.strip() == ""
 
     def test_hay_registro_de_decisiones(self):
         assert (RAIZ / "docs/decisiones.md").is_file()

@@ -96,5 +96,5 @@ baseline está ejecutado y congelado en `resultados/baseline/` con su
 `SELLO.json`.
 
 Falta la fase 4 —el agente final, su middleware y el guardarraíl XBRL—, y con
-ella la mitad derecha de la tabla del informe. `docs/decisiones.md` y
-`prompts/PROMPTS_POR_FASE.md` dicen qué falta y de quién es cada fase.
+ella la mitad derecha de la tabla del informe. `docs/decisiones.md` dice por qué
+cada cosa es como es.

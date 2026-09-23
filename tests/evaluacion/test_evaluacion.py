@@ -135,7 +135,7 @@ def pregunta_extractiva() -> Pregunta:
         item_esperado="1A",
         ancla_texto=ANCLA,
         herramienta_esperada=["search_filings"],
-        autor="raul",
+        autor="equipo",
     )
 
 
@@ -149,7 +149,7 @@ def pregunta_hueco() -> Pregunta:
         concept_xbrl="GrossProfit",
         cifra_esperada=None,
         herramienta_esperada=["get_xbrl_fact"],
-        autor="raul",
+        autor="equipo",
     )
 
 
