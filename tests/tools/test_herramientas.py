@@ -309,3 +309,19 @@ def test_un_fragmento_sin_puntuacion_se_renderiza_igual():
     salida = formato.fragmentos([f])
     assert "[X-2024-7-0000]" in salida
     assert "similitud" not in salida
+
+
+def test_el_beneficio_por_accion_no_se_redondea_a_entero():
+    """11,86 USD/acción salía como «12»: el modelo copiaba el 12 y la tolerancia
+    absoluta de 1 USD lo daba por bueno. Lo encontró el ensayo del clon limpio."""
+    from agente_10k.dominio.modelos import HechoXbrl
+    from agente_10k.tools.formato import hecho_xbrl
+
+    eps = HechoXbrl(
+        ticker="MSFT",
+        fiscal_year=2024,
+        concept="EarningsPerShareBasic",
+        value=11.86,
+        unit="USD/shares",
+    )
+    assert "11.86 USD/shares" in hecho_xbrl(eps)

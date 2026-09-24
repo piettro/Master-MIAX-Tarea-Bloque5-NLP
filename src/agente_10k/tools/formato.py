@@ -78,8 +78,20 @@ def hecho_xbrl(hecho: HechoXbrl) -> str:
     sufijo = f" ({', '.join(cola)})" if cola else ""
     return (
         f"{hecho.ticker} FY{hecho.fiscal_year} · {hecho.concept} = "
-        f"{hecho.value:,.0f} {hecho.unit}{sufijo}"
+        f"{_valor(hecho.value)} {hecho.unit}{sufijo}"
     )
+
+
+def _valor(valor: float) -> str:
+    """El valor sin perder precisión: un BPA de 11,86 no puede salir como 12.
+
+    Los importes van sin decimales, que en USD no aportan nada; lo que está por
+    debajo del millar —beneficio por acción, ratios— lleva los dos que reporta
+    la compañía.
+    """
+    if abs(valor) >= 1000:  # noqa: PLR2004 — por debajo, magnitudes por acción
+        return f"{valor:,.0f}"
+    return f"{valor:,.2f}"
 
 
 def hueco_real(
