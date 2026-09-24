@@ -73,6 +73,17 @@ está. Y su simétrico, la **abstención indebida**: decir «no hay dato» cuand
 lo había. Un sistema que no contesta nunca no alucina y no vale para nada; hacen
 falta las dos columnas para que ninguna de las dos trampas pase desapercibida.
 
+### Una limitación que conocemos
+
+La tolerancia absoluta de 1 USD está pensada para importes de miles de millones,
+donde un dólar es ruido. Para una magnitud por acción es demasiado laxa: con un
+beneficio por acción de 11,86 USD, decir 12 entra en tolerancia, y es un error
+del 1,2 %. Lo descubrimos ensayando sobre un clon limpio —`get_xbrl_fact`
+redondeaba el BPA a entero y el modelo copiaba el 12—. Arreglamos la
+herramienta, pero **no** tocamos la tolerancia: cambiar la vara de medir después
+de congelar el baseline haría que las dos columnas de la tabla no se midieran
+igual. Lo correcto a futuro es una tolerancia por unidad.
+
 ### Veinte preguntas no son una muestra grande
 
 Con veinte preguntas, subir de 12 a 14 aciertos es mover dos preguntas. Por eso
@@ -138,6 +149,21 @@ dejar constancia en `docs/decisiones.md`.
 {{incluir: docs/informe/tabla_principal.md}}
 
 {{incluir: docs/informe/significancia.md}}
+
+### ¿Qué aporta el retrieval al agente?
+
+La tabla de ablación de la sección 4 mide el buscador solo. Esta mide el agente
+entero con y sin las mejoras de búsqueda: la fila del medio es el sistema final
+con el retrieval del baseline —denso, sin filtro previo, sin reescritura y sin
+reordenar—.
+
+{{incluir: docs/informe/tabla_sistemas.md}}
+
+El agente pasa sus propios filtros de emisor y ejercicio a `search_filings` y
+saca las cifras de XBRL, así que buena parte de lo que arregla el retrieval ya
+lo arreglaba él. La diferencia que quede entre las dos filas es lo que el
+retrieval aporta de verdad al sistema, y la columna de coste y latencia dice
+cuánto cuesta.
 
 ### El baseline, en detalle
 

@@ -364,6 +364,12 @@ def generar_todo(dir_resultados: Path, destino: Path) -> list[Path]:
         escribir("significancia.md", tabla_significancia(*comparados))
         _csv_principal(comparados, destino / "tabla_principal.csv")
         escritos.append(destino / "tabla_principal.csv")
+    # Todos los sistemas del golden set en una tabla: el baseline, el final y
+    # cualquier variante del final que se haya medido (ablación a nivel agente).
+    propios = [e for e in informes if e != "ciegas"]
+    if len(propios) > 2:  # noqa: PLR2004 — con dos ya está la tabla principal
+        orden = sorted(propios, key=lambda e: (e != "baseline", e == "final", e))
+        escribir("tabla_sistemas.md", tabla_comparada([informes[e] for e in orden]))
     if "ciegas" in informes and "final" in informes:
         escribir("delta_ciegas.md", tabla_delta(informes["final"], informes["ciegas"]))
     return escritos

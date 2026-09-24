@@ -639,3 +639,18 @@ class TestGenerarTodo:
         )
         assert "pp" in tabla
         assert "-33 pp" in tabla or "−33 pp" in tabla
+
+
+def test_con_variantes_del_final_saca_la_tabla_de_todos(tmp_path):
+    """La ablación a nivel agente: baseline, variantes y final, en ese orden."""
+    from agente_10k.evaluacion.informe import generar_todo
+
+    escritor = TestGenerarTodo()
+    resultados = tmp_path / "resultados"
+    escritor._escribir(resultados, "baseline", [True, False])
+    escritor._escribir(resultados, "final", [True, True])
+    escritor._escribir(resultados, "final-sin-mejoras-retrieval", [True, False])
+    generar_todo(resultados, tmp_path / "docs")
+    tabla = (tmp_path / "docs" / "tabla_sistemas.md").read_text(encoding="utf-8")
+    filas = [f.split("|")[1].strip() for f in tabla.splitlines()[2:]]
+    assert filas == ["baseline", "final-sin-mejoras-retrieval", "final"]
