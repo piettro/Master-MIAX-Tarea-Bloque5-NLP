@@ -7,6 +7,8 @@ Práctica de *LLMs aplicados a Finanzas* · MIAX, Instituto BME.
 
 **Autores:** Alonso, Piettro y Raúl.
 
+El informe con los resultados y su lectura está en [`informe.pdf`](informe.pdf).
+
 ## Instalación
 
 ```bash
