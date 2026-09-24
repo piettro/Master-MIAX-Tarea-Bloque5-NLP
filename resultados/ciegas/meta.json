@@ -1,0 +1,74 @@
+{
+  "etiqueta": "ciegas",
+  "fecha": "2026-09-24T16:49:50.561149Z",
+  "ruta_preguntas": "ciegas.jsonl",
+  "modelo": "google/gemini-3.8-flash",
+  "proveedor": "openrouter",
+  "commit": "c2b5c00",
+  "configuracion": {
+    "sistema": "agente final",
+    "modelo": "openrouter:google/gemini-3.8-flash",
+    "en_reserva": false,
+    "limite_llamadas": 8,
+    "guardarrail_xbrl": true,
+    "reintentos_guardarrail": 1,
+    "version_prompt": "v2",
+    "origen_coste": "estimado con miax_s2.PRECIOS_OPENROUTER",
+    "retrieval": {
+      "recuperador": "hibrido",
+      "filtro_metadatos": true,
+      "reescritura_consulta": true,
+      "reordenacion": true,
+      "fusion_reordenacion": true,
+      "rrf_k": 60,
+      "k_por_defecto": 5
+    },
+    "max_llamadas_herramienta": 8,
+    "tolerancia_cifra": "0.500% relativo o 1 en valor absoluto, lo que sea mayor",
+    "normalizacion_cita": "NFKC; comillas tipográficas y guiones largos a ASCII; espacios sin ruptura, tabuladores y saltos de línea colapsados a un espacio; recorte de extremos. Se conservan mayúsculas y puntuación.",
+    "tiempo_maximo_s": 180.0,
+    "puesto_del_ancla": {
+      "ho-001": 3,
+      "ho-002": 1,
+      "ho-003": 1,
+      "ho-007": 2,
+      "ho-008": 5,
+      "ho-009": 2,
+      "ho-010": 2
+    },
+    "avisos": []
+  },
+  "metricas": {
+    "n_preguntas": 10,
+    "aciertos_por_familia": {
+      "extractiva": 0.6666666666666666,
+      "total": 0.9,
+      "numerica": 1.0,
+      "hueco": 1.0,
+      "comparativa": 1.0
+    },
+    "n_por_familia": {
+      "extractiva": 3,
+      "total": 10,
+      "numerica": 3,
+      "hueco": 2,
+      "comparativa": 4
+    },
+    "recall_at_k": {
+      "1": 0.2857142857142857,
+      "3": 0.8571428571428571,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 0.5761904761904761,
+    "coste_medio_usd": 0.016964175,
+    "latencia_media_s": 35.841838599999754,
+    "llamadas_por_pregunta": 2.9,
+    "tasa_camino_correcto": 1.0,
+    "tasa_acierto_por_camino_equivocado": 0.0,
+    "tasa_intervencion_guardarrail": 0.1,
+    "tasa_recuperacion_guardarrail": 1.0,
+    "alucinaciones_sobre_hueco": 0,
+    "tasa_abstencion_indebida": 0.0
+  }
+}
