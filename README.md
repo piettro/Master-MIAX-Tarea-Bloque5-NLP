@@ -90,11 +90,10 @@ docs/decisiones.md  los ADR: por qué cada cosa es como es
 
 ## Estado
 
-Hechos: dominio, corpus, herramientas, retrieval con su tabla de ablación,
-golden set de 20 preguntas, evaluación completa y el informe en PDF. El
-baseline está ejecutado y congelado en `resultados/baseline/` con su
-`SELLO.json`.
+Completo: dominio, corpus, herramientas, retrieval con su tabla de ablación,
+el agente con su middleware y el guardarraíl XBRL, golden set de 20 preguntas,
+evaluación y el informe en PDF. El baseline está congelado en
+`resultados/baseline/` con su `SELLO.json`, y el sistema final en
+`resultados/final/`.
 
-Falta la fase 4 —el agente final, su middleware y el guardarraíl XBRL—, y con
-ella la mitad derecha de la tabla del informe. `docs/decisiones.md` dice por qué
-cada cosa es como es.
+`docs/decisiones.md` dice por qué cada cosa es como es.

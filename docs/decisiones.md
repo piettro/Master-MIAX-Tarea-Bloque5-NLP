@@ -478,6 +478,49 @@ de un fichero.
 
 ---
 
+## ADR-022 · La configuración por defecto es la del sistema final
+
+**Contexto.** `Settings` tenía por defecto el retrieval de partida: denso, sin
+filtro previo, sin reescritura. Era lo honesto para medir la ablación, pero el
+día 24 el profesor ejecuta `responder()` y `evaluar()` sobre un clon limpio sin
+exportar ninguna variable, y con esos valores habría ejecutado el baseline en
+lugar del sistema que se defiende.
+
+**Opciones.** (a) Documentar qué variables hay que exportar. (b) Que los
+valores por defecto sean los del sistema final y que lo demás —el baseline y
+cada fila de la ablación— declare explícitamente de dónde parte.
+
+**Decisión.** (b). Por defecto: híbrido, filtro de metadatos, reescritura y
+reordenación fusionada por RRF, la fila que ganó la ablación. El baseline y la
+ablación parten de `retrieval.fabrica.SIN_MEJORAS` más sus overrides.
+
+**Consecuencia.** Un clon limpio ejecuta el sistema final sin configurar nada.
+A cambio, medir una configuración ya no es «los valores por defecto más un
+cambio», sino «`SIN_MEJORAS` más un cambio»: está escrito en un solo sitio y
+lo usan los dos llamantes.
+
+---
+
+## ADR-023 · Los errores del proveedor suben; los del modelo, no
+
+**Contexto.** El contrato dice que el agente no lanza: una excepción abortaría
+el golden set. Pero hay dos clases de fallo. Uno es que el modelo devuelva una
+salida estructurada que no valida. Otro, que OpenRouter conteste con un error.
+Si los dos acaban en `fuente="ninguna"`, una caída de red en una pregunta hueco
+cuenta como acierto: el sistema «dijo que no estaba».
+
+**Decisión.** `AgenteInvestigador.responder` convierte en `fuente="ninguna"`
+solo lo que es culpa del modelo. Los errores del proveedor se reintentan dos
+veces (`ModelRetryMiddleware`) y, si siguen, suben: el ejecutor los registra
+como error de ejecución y la pregunta cuenta como fallo, que es lo que es.
+`agente_10k.responder()`, la función pública del día 24, sí lo envuelve todo:
+ahí no hay evaluación que falsear y una excepción sí rompería la sesión.
+
+**Consecuencia.** La columna de hueco no se puede inflar con errores de red, y
+la tabla distingue «falló el sistema» de «falló el proveedor».
+
+---
+
 ## Pendiente de decidir
 
 - **Troceado propio.** El corpus viene troceado a ~500 tokens con 80 de solape.
