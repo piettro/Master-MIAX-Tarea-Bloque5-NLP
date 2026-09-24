@@ -7,7 +7,8 @@ Práctica de *LLMs aplicados a Finanzas* · MIAX, Instituto BME.
 
 **Autores:** Alonso, Piettro y Raúl.
 
-El informe con los resultados y su lectura está en [`informe.pdf`](informe.pdf).
+El informe con los resultados y su lectura está en [`informe.pdf`](informe.pdf), y la
+presentación de clase en [`presentacion clase taller NLP.pdf`](presentacion%20clase%20taller%20NLP.pdf).
 
 ## Instalación
 
