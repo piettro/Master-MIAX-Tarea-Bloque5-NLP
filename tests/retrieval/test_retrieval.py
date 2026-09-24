@@ -283,7 +283,8 @@ class TestFabrica:
         from agente_10k.config import Settings
         from agente_10k.retrieval.fabrica import construir_recuperador
 
-        cfg = Settings(dir_corpus=corpus_fixture.dir_corpus)
+        # Sin reescritura: si no, salta antes la precondición del proveedor.
+        cfg = Settings(dir_corpus=corpus_fixture.dir_corpus, reescritura_consulta=False)
         object.__setattr__(cfg, "recuperador", "inventado")
         with pytest.raises(ValueError, match="desconocido"):
             construir_recuperador(corpus_fixture, cfg)
