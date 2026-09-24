@@ -34,7 +34,7 @@ app = typer.Typer(
 @app.callback()
 def _entorno() -> None:
     """Carga `.env` antes de cualquier orden, para que la clave llegue al SDK."""
-    from agente_10k.evaluacion.sistemas import cargar_entorno
+    from agente_10k.config import cargar_entorno
 
     cargar_entorno()
 
@@ -155,13 +155,9 @@ def baseline(
         )
         raise typer.Exit(1)
 
-    cfg = settings().model_copy(
-        update={
-            "recuperador": "denso",
-            "filtro_metadatos": False,
-            "reescritura_consulta": False,
-        }
-    )
+    from agente_10k.retrieval.fabrica import SIN_MEJORAS
+
+    cfg = settings().model_copy(update=dict(SIN_MEJORAS))
     informe = _evaluar(
         ruta_jsonl,
         etiqueta="baseline",
@@ -225,15 +221,9 @@ def ablacion(
     # clave, se mide el resto y esa fila queda pendiente, sin abortar.
     proveedor: ProveedorLLM | None = None
     if cfg.hay_clave():
-        try:
-            from agente_10k.agente.proveedores import construir_proveedor
+        from agente_10k.agente.proveedores import construir_proveedor
 
-            proveedor = cast("ProveedorLLM", construir_proveedor(cfg))
-        except NotImplementedError:
-            # Fase 4 sin implementar: para medir basta un chat pelado.
-            from agente_10k.evaluacion.sistemas import ProveedorMedicion
-
-            proveedor = ProveedorMedicion(cfg)
+        proveedor = cast("ProveedorLLM", construir_proveedor(cfg))
 
     filas = ejecutar_ablacion(corpus, preguntas, cfg, proveedor)
     rutas = escribir_ablacion(filas, cfg.dir_resultados / "retrieval")

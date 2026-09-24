@@ -142,6 +142,7 @@ class Herramientas:
 def herramientas_por_defecto(
     config: Settings | None = None,
     proveedor: object | None = None,
+    corpus: Corpus | None = None,
 ) -> Herramientas:
     """El cinturón montado desde la configuración del proceso.
 
@@ -152,7 +153,7 @@ def herramientas_por_defecto(
     un `search_filings` que no busca y no dice por qué se descubre el día 24.
     """
     cfg = config or settings()
-    corpus = cargar_corpus(cfg)
+    corpus = corpus or cargar_corpus(cfg)
     recuperador: Recuperador | None = None
     motivo: str | None = None
     try:

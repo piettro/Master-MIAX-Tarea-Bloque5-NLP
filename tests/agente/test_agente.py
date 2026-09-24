@@ -1,7 +1,9 @@
-"""El agente. Lo verde es el prompt y los ayudantes; lo `xfail` es la fase 4.
+"""El agente: prompt, proveedor, limitador, guardarraíl y constructor.
 
-Toda la suite corre con `ProveedorFake`: sin red, sin clave de API y sin gastar
-un céntimo. Si algún test de aquí necesita una clave, está mal escrito.
+Todo corre sin red salvo `TestConstructor`, que llama al modelo de verdad para
+comprobar el enrutado: sin clave se salta, con clave cuesta unas décimas de
+céntimo. Es el único sitio donde tiene sentido, porque lo que prueba es qué
+decide el modelo, y eso un doble no lo puede decir.
 """
 
 from __future__ import annotations
@@ -18,7 +20,17 @@ from agente_10k.agente.proveedores import CODIGOS_CUOTA, ProveedorFake
 from agente_10k.agente.trazas import cumple_trayectoria, resumir
 from agente_10k.dominio.modelos import LlamadaHerramienta, Traza, UsoTokens
 
-FASE_4 = pytest.mark.xfail(strict=True, reason="Fase 4 · Piettro")
+
+def _hay_clave() -> bool:
+    from agente_10k.config import Settings, cargar_entorno
+
+    cargar_entorno()
+    return Settings().hay_clave()
+
+
+CON_MODELO = pytest.mark.skipif(
+    not _hay_clave(), reason="llama al modelo de verdad: hace falta la clave"
+)
 
 
 class TestSystemPrompt:
@@ -156,12 +168,11 @@ def test_los_codigos_de_cuota_son_los_tres():
 
 
 # ---------------------------------------------------------------------------
-# FASE 4 — la especificación, en rojo
+# FASE 4
 # ---------------------------------------------------------------------------
 
 
 class TestLimitadorLlamadas:
-    @FASE_4
     def test_corta_en_la_llamada_n_mas_uno(self):
         from agente_10k.agente.middleware import LimitadorLlamadas
 
@@ -174,7 +185,6 @@ class TestLimitadorLlamadas:
         traza.llamadas.append(LlamadaHerramienta(nombre="get_xbrl_fact"))
         assert "presupuesto" in (limitador.procesar(traza) or "")
 
-    @FASE_4
     def test_el_mensaje_autoriza_a_rendirse(self):
         """El bucle infinito del margen bruto de Amazon termina aquí."""
         from agente_10k.agente.middleware import LimitadorLlamadas
@@ -185,7 +195,6 @@ class TestLimitadorLlamadas:
 
 
 class TestGuardarrailXbrl:
-    @FASE_4
     def test_devuelve_el_desajuste_al_modelo(self, repo_xbrl):
         from agente_10k.agente.middleware import GuardarrailXbrl
         from agente_10k.dominio.modelos import RespuestaFinanciera
@@ -204,7 +213,6 @@ class TestGuardarrailXbrl:
         assert "GUARDARRAÍL" in mensaje
         assert "60,922,000,000" in mensaje
 
-    @FASE_4
     def test_NO_corrige_la_cifra_por_su_cuenta(self, repo_xbrl):
         """Corregirla enmascara el fallo y falsea la evaluación: la tabla diría
         que acierta el sistema cuando quien acierta es el guardarraíl."""
@@ -222,7 +230,6 @@ class TestGuardarrailXbrl:
         GuardarrailXbrl(repo_xbrl).verificar(respuesta)
         assert respuesta.cifra == 99_999_000_000.0
 
-    @FASE_4
     def test_acepta_el_redondeo_de_la_prosa(self, repo_xbrl):
         from agente_10k.agente.middleware import GuardarrailXbrl
         from agente_10k.dominio.modelos import RespuestaFinanciera
@@ -237,7 +244,6 @@ class TestGuardarrailXbrl:
         )
         assert GuardarrailXbrl(repo_xbrl).verificar(respuesta) is None
 
-    @FASE_4
     def test_no_salta_ante_una_respuesta_de_hueco(self, repo_xbrl):
         """`fuente="ninguna"` con `cifra=None` es la respuesta CORRECTA."""
         from agente_10k.agente.middleware import GuardarrailXbrl
@@ -248,7 +254,6 @@ class TestGuardarrailXbrl:
         )
         assert GuardarrailXbrl(repo_xbrl).verificar(respuesta) is None
 
-    @FASE_4
     def test_usa_la_misma_tolerancia_que_el_evaluador(self, repo_xbrl):
         from agente_10k.agente.middleware import GuardarrailXbrl
         from agente_10k.dominio.tolerancia import TOLERANCIA
@@ -257,7 +262,7 @@ class TestGuardarrailXbrl:
 
 
 class TestConstructor:
-    @FASE_4
+    @CON_MODELO
     def test_una_pregunta_numerica_pasa_por_get_xbrl_fact(self):
         from agente_10k.agente.constructor import construir_agente
 
@@ -266,7 +271,7 @@ class TestConstructor:
         )
         assert "get_xbrl_fact" in traza.trayectoria
 
-    @FASE_4
+    @CON_MODELO
     def test_un_emisor_fuera_del_corpus_no_dispara_retrieval(self):
         from agente_10k.agente.constructor import construir_agente
 
@@ -276,7 +281,7 @@ class TestConstructor:
         assert respuesta.fuente == "ninguna"
         assert "search_filings" not in traza.trayectoria
 
-    @FASE_4
+    @CON_MODELO
     def test_una_salida_invalida_no_lanza(self):
         """Una excepción aquí abortaría la evaluación del golden set entero."""
         from agente_10k.agente.constructor import construir_agente
@@ -287,7 +292,6 @@ class TestConstructor:
 
 
 class TestProveedorConFallback:
-    @FASE_4
     def test_conmuta_al_alternativo_ante_429(self):
         from agente_10k.agente.proveedores import ProveedorLangChain
         from agente_10k.config import Settings
@@ -295,7 +299,6 @@ class TestProveedorConFallback:
         proveedor = ProveedorLangChain(Settings())
         assert not proveedor.en_reserva
 
-    @FASE_4
     def test_no_reintenta_el_primario_en_cada_llamada(self):
         """El pseudocódigo de clase reintentaba el gratuito cada vez y el
         profesor señaló que está mal: son N llamadas fallidas de más."""

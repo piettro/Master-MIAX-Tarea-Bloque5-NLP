@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as TiempoAgotado
 from pathlib import Path
 
-from agente_10k.config import RAIZ_REPO, Settings, settings
+from agente_10k.config import RAIZ_REPO, Settings, cargar_entorno, settings
 from agente_10k.corpus import Corpus, cargar_corpus
 from agente_10k.corpus.normalizacion import describir as describir_normalizacion
 from agente_10k.dominio.modelos import (
@@ -32,7 +32,7 @@ from agente_10k.evaluacion.evaluadores import (
     es_respuesta_correcta,
 )
 from agente_10k.evaluacion.metricas import agregar, medir_recall
-from agente_10k.evaluacion.sistemas import Sistema, cargar_entorno, sistema_final
+from agente_10k.evaluacion.sistemas import Sistema, sistema_final
 
 # Segundos por pregunta antes de darla por fallida; una normal tarda 3-30 s.
 TIEMPO_MAXIMO_S = 180.0

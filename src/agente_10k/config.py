@@ -84,27 +84,26 @@ class Settings(BaseSettings):
     )
 
     # --- retrieval (F3) ----------------------------------------------------
-    recuperador: TipoRecuperador = "denso"
+    # Los valores por defecto son los del SISTEMA FINAL, la fila que ganó la
+    # ablación (ADR-022): `responder()` sobre un clon limpio tiene que ejecutar
+    # el sistema que se defiende sin exportar nada. El baseline y las filas de
+    # la ablación parten de `retrieval.fabrica.SIN_MEJORAS`, no de aquí.
+    recuperador: TipoRecuperador = "hibrido"
     filtro_metadatos: bool = Field(
-        default=False,
+        default=True,
         description=(
-            "Aplicar los filtros ANTES de buscar. Por defecto FALSE, que es lo "
-            "que hace la implementación del profesor: filtra después, sobre el "
-            "orden que devuelve el índice. Es el baseline honesto, y activarlo "
-            "es la primera fila de la tabla de ablación (ADR-009)"
+            "Aplicar los filtros ANTES de buscar. El profesor filtra después, "
+            "sobre el orden que devuelve el índice; hacerlo antes es la primera "
+            "fila de la tabla de ablación (ADR-009)"
         ),
     )
-    reescritura_consulta: bool = False
+    reescritura_consulta: bool = True
     reordenacion: bool = Field(
-        default=False,
-        description=(
-            "Reordenar los candidatos con un cross-encoder. Apagado por "
-            "defecto: activarlo es una fila de la ablación, no el punto de "
-            "partida"
-        ),
+        default=True,
+        description="Reordenar los candidatos con un cross-encoder (ADR-016)",
     )
     fusion_reordenacion: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Mezclar el orden del cross-encoder con el del recuperador por RRF "
             "en vez de sustituirlo. Protege el recall profundo a costa de algo "
@@ -122,7 +121,7 @@ class Settings(BaseSettings):
 
     # --- salida ------------------------------------------------------------
     dir_resultados: Path = Path("resultados")
-    version_prompt: str = "v1"
+    version_prompt: str = "v2"
 
     @field_validator("dir_corpus", "dir_cache", "dir_resultados", mode="after")
     @classmethod
@@ -211,6 +210,17 @@ class Settings(BaseSettings):
             "rrf_k": self.rrf_k,
             "k_por_defecto": self.k_por_defecto,
         }
+
+
+def cargar_entorno() -> None:
+    """Carga `.env` en `os.environ` sin pisar lo que ya esté exportado.
+
+    `Settings` solo lee de `.env` sus campos `AGENTE10K_*`, no las claves de
+    API, que el SDK busca en el entorno.
+    """
+    from dotenv import load_dotenv
+
+    load_dotenv(RAIZ_REPO / ".env", override=False)
 
 
 @lru_cache(maxsize=1)

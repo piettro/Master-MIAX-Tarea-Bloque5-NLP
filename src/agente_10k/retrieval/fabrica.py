@@ -28,21 +28,15 @@ from agente_10k.retrieval.denso import RecuperadorDenso
 def proveedor_de_reescritura(cfg: Settings) -> ProveedorLLM | None:
     """Quien reescribe la consulta, si la configuración lo pide.
 
-    La fábrica de la fase 4 manda; mientras no exista, vale el proveedor pelado
-    de la evaluación. Está aquí y no en cada llamante para que el agente y la
-    medición del recall usen exactamente el mismo recuperador: medir una
-    configuración distinta de la que responde no vale nada.
+    Está aquí y no en cada llamante para que el agente y la medición del
+    recall usen exactamente el mismo recuperador: medir una configuración
+    distinta de la que responde no vale nada.
     """
     if not cfg.reescritura_consulta:
         return None
-    try:
-        from agente_10k.agente.proveedores import construir_proveedor
+    from agente_10k.agente.proveedores import construir_proveedor
 
-        return construir_proveedor(cfg)  # type: ignore[return-value]
-    except NotImplementedError:
-        from agente_10k.evaluacion.sistemas import ProveedorMedicion
-
-        return ProveedorMedicion(cfg)
+    return construir_proveedor(cfg)
 
 
 def construir_recuperador(
@@ -136,6 +130,21 @@ def _base(corpus: Corpus, cfg: Settings) -> Recuperador:
         )
     raise ValueError(f"Recuperador desconocido: {cfg.recuperador!r}")
 
+
+SIN_MEJORAS: dict[str, object] = {
+    "recuperador": "denso",
+    "filtro_metadatos": False,
+    "reescritura_consulta": False,
+    "reordenacion": False,
+    "fusion_reordenacion": False,
+}
+"""El retrieval de partida: el denso del profesor, sin nada encima.
+
+Cada fila de la ablación se mide sobre ESTO más sus overrides, no sobre los
+valores por defecto de `Settings`, que son los del sistema final (ADR-022). Si
+se midiera sobre los de por defecto, la fila «denso (base)» llevaría puestas
+todas las mejoras sin decirlo.
+"""
 
 CONFIGURACIONES_ABLACION: tuple[tuple[str, dict[str, object]], ...] = (
     ("denso (base)", {"recuperador": "denso", "filtro_metadatos": False}),

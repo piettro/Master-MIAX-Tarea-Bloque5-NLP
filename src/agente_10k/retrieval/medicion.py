@@ -42,7 +42,11 @@ from agente_10k.dominio.modelos import Filtros, Fragmento, Pregunta, UsoTokens
 from agente_10k.dominio.protocolos import ProveedorLLM, Recuperador
 from agente_10k.evaluacion.estadistica import mcnemar
 from agente_10k.evaluacion.metricas import mrr, posicion_del_ancla, recall_at_k
-from agente_10k.retrieval.fabrica import CONFIGURACIONES_ABLACION, construir_recuperador
+from agente_10k.retrieval.fabrica import (
+    CONFIGURACIONES_ABLACION,
+    SIN_MEJORAS,
+    construir_recuperador,
+)
 
 MINIMO_PARA_COMPARAR = 2  # con una sola configuración no hay contraste
 
@@ -133,7 +137,7 @@ def medir_configuracion(
     podría comprobar la lógica del runner —el recall, el coste, la decisión de
     pasar o no los filtros— sin 130 MB de descarga. En producción va a `None`.
     """
-    cfg = base.model_copy(update=overrides)
+    cfg = base.model_copy(update={**SIN_MEJORAS, **overrides})
     k_max = max(ks)
 
     if recuperador is None:

@@ -55,7 +55,14 @@ def responder(pregunta: str) -> RespuestaFinanciera:
     """
     from agente_10k.agente.constructor import construir_agente
 
-    respuesta, _ = construir_agente().responder(pregunta)
+    try:
+        respuesta, _ = construir_agente().responder(pregunta)
+    except Exception as exc:  # nunca una excepción: abortaría las ciegas
+        return RespuestaFinanciera(
+            respuesta="No se ha podido responder.",
+            fuente="ninguna",
+            motivo_sin_dato=f"{type(exc).__name__}: {exc}"[:500],
+        )
     return respuesta
 
 

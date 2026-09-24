@@ -11,118 +11,44 @@ import uuid
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from agente_10k.config import RAIZ_REPO, Settings, settings
-from agente_10k.dominio.modelos import (
-    LlamadaHerramienta,
-    RespuestaFinanciera,
-    Traza,
-    UsoTokens,
+from agente_10k.agente.trazas import (
+    RESULTADO_MAXIMO_TRAZA,
+    extraer_llamadas,
+    extraer_uso,
+    respuesta_de,
 )
+from agente_10k.config import Settings, cargar_entorno, settings
+from agente_10k.dominio.modelos import RespuestaFinanciera, Traza, UsoTokens
 
 Sistema = Callable[[str], tuple[RespuestaFinanciera, Traza]]
 """Una pregunta entra; la respuesta estructurada y su traza salen."""
 
-# Caracteres del resultado de cada herramienta que se guardan en la traza:
-# `read_section` devuelve decenas de miles y `resultados/` acabaría pesando megas.
-RESULTADO_MAXIMO_TRAZA = 2000
+# Los nombres de siempre, para quien ya los importaba de aquí. La traducción de
+# mensajes vive en `agente/trazas.py`, que es donde la necesita el agente.
+llamadas_de_mensajes = extraer_llamadas
+uso_de_mensajes = extraer_uso
 
-
-def cargar_entorno() -> None:
-    """Carga `.env` en `os.environ` sin pisar lo que ya esté exportado.
-
-    `Settings` solo lee de `.env` sus campos `AGENTE10K_*`, no las claves de API.
-    """
-    from dotenv import load_dotenv
-
-    load_dotenv(RAIZ_REPO / ".env", override=False)
-
-
-class _ChatQueRegistra:
-    """Envuelve el chat de LangChain para anotar el uso de cada llamada."""
-
-    def __init__(self, chat: object, anotar: Callable[[object], None]) -> None:
-        """Envuelve `chat` y llama a `anotar` con cada respuesta."""
-        self._chat = chat
-        self._anotar = anotar
-
-    def invoke(self, mensajes: object) -> object:
-        """Invoca el modelo y anota lo que gastó."""
-        respuesta = self._chat.invoke(mensajes)  # type: ignore[attr-defined]
-        self._anotar(respuesta)
-        return respuesta
-
-
-class ProveedorMedicion:
-    """Un `ProveedorLLM` mínimo, solo para medir la ablación de retrieval.
-
-    La reescritura de consulta necesita un proveedor y la fábrica de la fase 4
-    todavía no existe. Esto no monta ningún agente: abre el chat, lo envuelve
-    para leer el uso y ya. Cuando `construir_proveedor` esté, `cli` lo prefiere
-    y esto sobra.
-    """
-
-    def __init__(self, config: Settings | None = None) -> None:
-        """Comprueba la clave y deja el chat sin construir."""
-        cfg = config or settings()
-        cargar_entorno()
-        cfg.clave_api()  # que falte la clave se ve aquí, no a mitad de la tabla
-        self._cfg = cfg
-        self._chat: Any = None
-        self._uso = UsoTokens()
-        self.origen_coste = "sin datos"
-
-    @property
-    def modelo(self) -> str:
-        """El modelo activo, para la traza."""
-        return self._cfg.llm_model
-
-    @property
-    def proveedor(self) -> str:
-        """El proveedor activo, para la traza."""
-        return self._cfg.llm_provider
-
-    def chat(self) -> object:
-        """El chat, construido al primer uso y reutilizado."""
-        if self._chat is None:
-            from langchain.chat_models import init_chat_model
-
-            modelo = init_chat_model(
-                self._cfg.identificador_modelo(),
-                temperature=self._cfg.temperatura,
-            )
-            self._chat = _ChatQueRegistra(modelo, self._anotar)
-        return self._chat
-
-    def uso_ultima_llamada(self) -> UsoTokens:
-        """Tokens y coste de la última llamada, leídos de sus metadatos."""
-        return self._uso
-
-    def _anotar(self, respuesta: object) -> None:
-        # OpenRouter no siempre devuelve el coste en los metadatos. Si no
-        # viene, se estima con la tarifa, y queda dicho cuál de las dos fue:
-        # una columna de coste en blanco haría parecer gratis la reescritura.
-        uso = uso_de_mensajes([respuesta])
-        if uso.coste_usd is None:
-            from agente_10k.baseline import miax_s2
-
-            coste = float(
-                miax_s2.coste_de(
-                    {"messages": [respuesta]}, self._cfg.identificador_modelo()
-                )
-            )
-            if coste:
-                self.origen_coste = "estimado con miax_s2.PRECIOS_OPENROUTER"
-                uso = uso.model_copy(update={"coste_usd": coste})
-        else:
-            self.origen_coste = "reportado por el proveedor"
-        self._uso = uso
+__all__ = [
+    "RESULTADO_MAXIMO_TRAZA",
+    "Sistema",
+    "SistemaBaseline",
+    "cargar_entorno",
+    "llamadas_de_mensajes",
+    "respuesta_de",
+    "sistema_final",
+    "uso_de_mensajes",
+]
 
 
 def sistema_final(config: Settings | None = None) -> Sistema:
-    """Nuestro agente, construido una sola vez desde la configuración."""
+    """Nuestro agente, construido una sola vez desde la configuración.
+
+    Se devuelve el agente entero y no su método: así su `descripcion` llega a
+    la configuración del informe.
+    """
     from agente_10k.agente.constructor import construir_agente
 
-    return construir_agente(config or settings()).responder
+    return construir_agente(config or settings())
 
 
 class SistemaBaseline:
@@ -195,86 +121,3 @@ class SistemaBaseline:
             self.origen_coste = "estimado con miax_s2.PRECIOS_OPENROUTER"
             return uso.model_copy(update={"coste_usd": coste})
         return uso
-
-
-# ---------------------------------------------------------------------------
-# Traducción de los mensajes de LangChain. Funciones puras: se prueban sin red.
-# ---------------------------------------------------------------------------
-
-# La salida estructurada llega como una `tool_call` más, pero no es del agente
-# y no entra en la trayectoria.
-NOMBRE_ESQUEMA = RespuestaFinanciera.__name__
-
-
-def llamadas_de_mensajes(mensajes: Sequence[Any]) -> list[LlamadaHerramienta]:
-    """Las llamadas a herramienta, emparejadas con su resultado por `tool_call_id`.
-
-    Por identificador y no por orden: el modelo puede pedir varias en un turno.
-    """
-    resultados = {
-        getattr(m, "tool_call_id", None): str(getattr(m, "content", ""))
-        for m in mensajes
-        if getattr(m, "type", "") == "tool"
-    }
-    llamadas: list[LlamadaHerramienta] = []
-    for mensaje in mensajes:
-        for llamada in getattr(mensaje, "tool_calls", None) or []:
-            if llamada.get("name") == NOMBRE_ESQUEMA:
-                continue
-            resultado = resultados.get(llamada.get("id"), "")
-            llamadas.append(
-                LlamadaHerramienta(
-                    nombre=str(llamada.get("name", "")),
-                    argumentos=dict(llamada.get("args") or {}),
-                    resultado=resultado[:RESULTADO_MAXIMO_TRAZA],
-                )
-            )
-    return llamadas
-
-
-def _coste_reportado(mensaje: object) -> float | None:
-    """El coste que el proveedor puso en los metadatos del mensaje, si lo puso.
-
-    Según la versión del adaptador de LangChain cae en `token_usage` o en `usage`.
-    """
-    metadatos = getattr(mensaje, "response_metadata", None) or {}
-    for clave in ("token_usage", "usage"):
-        bloque = metadatos.get(clave) or {}
-        if isinstance(bloque, dict) and bloque.get("cost") is not None:
-            return float(bloque["cost"])
-    return None
-
-
-def uso_de_mensajes(mensajes: Sequence[Any]) -> UsoTokens:
-    """Tokens y coste acumulados de todos los mensajes del modelo."""
-    total = UsoTokens()
-    for mensaje in mensajes:
-        uso = getattr(mensaje, "usage_metadata", None) or {}
-        if not uso:
-            continue
-        total = total + UsoTokens(
-            tokens_entrada=int(uso.get("input_tokens", 0) or 0),
-            tokens_salida=int(uso.get("output_tokens", 0) or 0),
-            coste_usd=_coste_reportado(mensaje),
-        )
-    return total
-
-
-def respuesta_de(estructurada: object, mensajes: Sequence[Any]) -> RespuestaFinanciera:
-    """La `RespuestaFinanciera` del agente, o una de `fuente="ninguna"` si no hay.
-
-    Sin salida estructurada se guarda el último texto como prosa, sin inventar nada.
-    """
-    if estructurada is not None:
-        datos = (
-            estructurada.model_dump()
-            if hasattr(estructurada, "model_dump")
-            else estructurada
-        )
-        return RespuestaFinanciera.model_validate(datos)
-    ultimo = str(getattr(mensajes[-1], "content", "")) if mensajes else ""
-    return RespuestaFinanciera(
-        respuesta=ultimo[:1000],
-        fuente="ninguna",
-        motivo_sin_dato="el agente no produjo salida estructurada",
-    )
