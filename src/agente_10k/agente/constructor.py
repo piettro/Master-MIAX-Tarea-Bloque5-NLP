@@ -33,6 +33,18 @@ from agente_10k.agente.trazas import CapturadorTraza, respuesta_de
 from agente_10k.config import Settings, cargar_entorno, settings
 from agente_10k.dominio.modelos import RespuestaFinanciera, Traza
 
+MENSAJE_SIN_SALIDA = (
+    "No has devuelto la respuesta estructurada. Devuélvela ahora con el esquema "
+    "RespuestaFinanciera, usando lo que ya has consultado. Si no basta para "
+    'afirmar nada, fuente="ninguna" y explica en motivo_sin_dato qué faltó.'
+)
+"""Lo que se le dice al modelo cuando termina sin salida estructurada.
+
+Gemini a veces consulta bien, tiene la cifra delante y cierra con un mensaje
+vacío. Pedírsela en el mismo hilo cuesta una llamada; repetir la pregunta,
+todas las consultas otra vez.
+"""
+
 
 class AgenteInvestigador:
     """El agente montado: herramientas, prompt, middleware y salida estructurada."""
@@ -122,10 +134,17 @@ class AgenteInvestigador:
             self._cfg.version_prompt,
             config_retrieval=self._cfg.resumen_retrieval(),
         )
+        hilo = {"configurable": {"thread_id": f"pregunta-{uuid.uuid4().hex}"}}
         resultado = self._agente.invoke(
-            {"messages": [{"role": "user", "content": pregunta}]},
-            config={"configurable": {"thread_id": f"pregunta-{uuid.uuid4().hex}"}},
+            {"messages": [{"role": "user", "content": pregunta}]}, config=hilo
         )
+        if resultado.get("structured_response") is None:
+            # Mismo hilo: el modelo conserva lo que ya consultó, y la traza
+            # recoge las dos vueltas porque el estado es el del hilo entero.
+            resultado = self._agente.invoke(
+                {"messages": [{"role": "user", "content": MENSAJE_SIN_SALIDA}]},
+                config=hilo,
+            )
         mensajes = resultado.get("messages", [])
         traza = capturador.cerrar(resultado)
         uso = (
