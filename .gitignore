@@ -44,17 +44,10 @@ Thumbs.db
 desktop.ini
 
 # ---------------------------------------------------------------------------
-# Corpus. Pesa y lo reparte el profesor: NO se versiona el contenido, pero SÍ
-# el manifiesto y los checksums, que son lo que permite verificar que las tres
-# máquinas del grupo tienen exactamente el mismo corpus.
+# Corpus. El descomprimido SÍ viaja en el repositorio (unos 11 MB): así un clon
+# limpio ejecuta responder() y evaluar() sin pasos a mano. Los ZIP originales
+# del profesor no hacen falta.
 # ---------------------------------------------------------------------------
-# Un patron `data/corpus/**` tambien excluye los DIRECTORIOS, y git no
-# desciende a un directorio excluido: la negacion de MANIFEST.md no llegaria a
-# aplicarse nunca. Hay que reincluir el directorio paso a paso.
-data/corpus/*
-!data/corpus/indice/
-data/corpus/indice/*
-!data/corpus/indice/MANIFEST.md
 data/*.zip
 
 # Secciones reconstruidas desde los chunks: son un derivado, se regeneran con

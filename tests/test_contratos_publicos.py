@@ -222,16 +222,24 @@ class TestOrganizacionDelRepo:
         )
         assert r.returncode != 0, "el manifiesto está en .gitignore"
 
-    def test_el_corpus_pesado_no_se_versiona(self):
-        """5,6 MB que reparte el profesor y que no tienen por qué viajar."""
+    def test_el_corpus_viaja_en_el_repo(self):
+        """Un clon limpio tiene que poder ejecutar responder() sin pasos a mano."""
         r = subprocess.run(
-            ["git", "check-ignore", "data/corpus/indice/chunks_meta.parquet"],
+            ["git", "ls-files", "data/corpus"],
             check=False,
             capture_output=True,
             text=True,
             cwd=RAIZ,
         )
-        assert r.returncode == 0, "chunks_meta.parquet debería estar ignorado"
+        versionados = set(r.stdout.split())
+        for fichero in (
+            "data/corpus/secciones.jsonl",
+            "data/corpus/chunks.jsonl",
+            "data/corpus/xbrl_facts.parquet",
+            "data/corpus/indice/corpus.faiss",
+            "data/corpus/indice/chunks_meta.parquet",
+        ):
+            assert fichero in versionados, fichero
 
     def test_el_baseline_esta_congelado(self):
         """El protocolo del baseline vive en el README y en su sello."""

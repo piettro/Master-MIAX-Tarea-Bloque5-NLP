@@ -17,3 +17,8 @@
 # El JSONL del golden set: una linea por pregunta, y la fusion la hace un
 # script (golden/validador.py::fusionar_parciales), no git.
 *.jsonl text eol=lf
+
+# El corpus del profesor viaja byte a byte tal como se reparte (con CRLF): sin
+# esto, git le cambiaría los finales de línea y dejaría de ser idéntico al ZIP.
+data/corpus/*.jsonl -text
+data/corpus/*.md -text

@@ -17,7 +17,6 @@ git clone <este-repo> agente-10k && cd agente-10k
 python -m venv .venv && .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e .                                 # o: make setup
 cp .env.example .env                             # y pon tu OPENROUTER_API_KEY
-# descomprime corpus_miax_2026.zip e indice_faiss.zip dentro de data/corpus/
 agente-10k diagnostico                           # dice qué hay y qué falta
 ```
 
@@ -51,7 +50,8 @@ Sin `make` —Windows— `agente-10k` equivale a `python -m agente_10k.cli`.
 
 ## Corpus
 
-No se versiona: lo reparte el profesor en dos ZIP. Descomprimidos:
+Viene en el repositorio, ya descomprimido (unos 11 MB). Es el que reparte el
+profesor en dos ZIP, sin tocar:
 
 ```
 data/corpus/
@@ -61,7 +61,7 @@ data/corpus/
 └── indice/
     ├── corpus.faiss       IndexFlatIP, 1.749 × 384
     ├── chunks_meta.parquet   alineado fila a fila con el índice
-    └── MANIFEST.md        versionado: documenta el prefijo de la consulta
+    └── MANIFEST.md        documenta el prefijo de la consulta
 ```
 
 Si falta `secciones.jsonl`, el sistema deriva las secciones de los fragmentos y
