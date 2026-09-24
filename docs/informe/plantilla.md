@@ -150,6 +150,29 @@ dejar constancia en `docs/decisiones.md`.
 
 {{incluir: docs/informe/significancia.md}}
 
+**La mejora aguanta el contraste.** El sistema final no pierde ninguna pregunta
+que acertara el baseline, y la diferencia es significativa al 5 % con McNemar
+exacto. Los intervalos de Wilson de los dos sistemas apenas se tocan.
+
+### Qué cambió del baseline al final
+
+- **Comparativas.** El baseline no acertaba ninguna. El prompt le dice ahora
+  que haga dos consultas exactas, una por ejercicio, y que la respuesta lleve
+  cifra de XBRL y cita del texto a la vez.
+- **Huecos.** El baseline se inventó una cifra donde no había dato. El final
+  no alucina ninguna: el prompt autoriza a decir «no está», y el guardarraíl
+  no salta ante una respuesta de hueco.
+- **Guardarraíl XBRL.** Salta cuando la cifra afirmada no cuadra con el hecho
+  XBRL, le devuelve el desajuste al modelo y le deja corregir; nunca corrige él.
+  La tabla del guardarraíl, en el detalle del final, dice cuántas veces saltó y
+  cuántas de esas acabaron bien.
+- **Citas.** La versión 2 del prompt dice cómo se cita: frase literal y su
+  `chunk_id`. La mitad de los fallos de las extractivas eran citas
+  parafraseadas o sin identificador.
+- **Robustez.** Reintento ante errores transitorios del proveedor —una pregunta
+  moría en cada corrida por un «Provider returned error»—, y si el modelo
+  termina sin salida estructurada, se le pide en el mismo hilo.
+
 ### ¿Qué aporta el retrieval al agente?
 
 La tabla de ablación de la sección 4 mide el buscador solo. Esta mide el agente
@@ -159,11 +182,17 @@ reordenar—.
 
 {{incluir: docs/informe/tabla_sistemas.md}}
 
-El agente pasa sus propios filtros de emisor y ejercicio a `search_filings` y
-saca las cifras de XBRL, así que buena parte de lo que arregla el retrieval ya
-lo arreglaba él. La diferencia que quede entre las dos filas es lo que el
-retrieval aporta de verdad al sistema, y la columna de coste y latencia dice
-cuánto cuesta.
+**Casi toda la mejora es del agente, no del buscador.** El recall@5 pasa de
+un cuarto a más del noventa por ciento, y el acierto del agente sube una sola
+pregunta. Tiene explicación: el agente pasa sus propios filtros de emisor y
+ejercicio a `search_filings` y saca las cifras de XBRL, así que buena parte de
+lo que arregla el retrieval ya lo arreglaba él. Lo que el buscador sí aporta es
+eficiencia: con mejores fragmentos arriba, el agente hace menos llamadas y la
+pregunta sale algo más barata, aunque la reescritura añade la suya.
+
+Es el resultado más útil de la práctica y el menos intuitivo: una mejora
+enorme en la métrica de un componente puede no llegar al sistema. Por eso se
+mide las dos cosas.
 
 ### El baseline, en detalle
 

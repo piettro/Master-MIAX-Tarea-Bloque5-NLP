@@ -1,0 +1,79 @@
+{
+  "etiqueta": "final-sin-mejoras-retrieval",
+  "fecha": "2026-09-24T09:33:37.338679Z",
+  "ruta_preguntas": "golden\\golden_set.jsonl",
+  "modelo": "google/gemini-3.8-flash",
+  "proveedor": "openrouter",
+  "commit": "27e7369",
+  "configuracion": {
+    "sistema": "agente final (fase 4)",
+    "modelo": "openrouter:google/gemini-3.8-flash",
+    "en_reserva": false,
+    "limite_llamadas": 8,
+    "guardarrail_xbrl": true,
+    "reintentos_guardarrail": 1,
+    "version_prompt": "v2",
+    "origen_coste": "estimado con miax_s2.PRECIOS_OPENROUTER",
+    "retrieval": {
+      "recuperador": "denso",
+      "filtro_metadatos": false,
+      "reescritura_consulta": false,
+      "reordenacion": false,
+      "fusion_reordenacion": false,
+      "rrf_k": 60,
+      "k_por_defecto": 5
+    },
+    "max_llamadas_herramienta": 8,
+    "tolerancia_cifra": "0.500% relativo o 1 en valor absoluto, lo que sea mayor",
+    "normalizacion_cita": "NFKC; comillas tipográficas y guiones largos a ASCII; espacios sin ruptura, tabuladores y saltos de línea colapsados a un espacio; recorte de extremos. Se conservan mayúsculas y puntuación.",
+    "tiempo_maximo_s": 180.0,
+    "puesto_del_ancla": {
+      "g-r-005": null,
+      "g-r-006": null,
+      "g-r-007": null,
+      "g-r-008": null,
+      "g-r-009": null,
+      "g-r-010": null,
+      "g-r-011": 5,
+      "g-r-012": null,
+      "g-r-017": null,
+      "g-r-018": null,
+      "g-r-019": 4,
+      "g-r-020": 4
+    },
+    "avisos": []
+  },
+  "metricas": {
+    "n_preguntas": 20,
+    "aciertos_por_familia": {
+      "numerica": 1.0,
+      "total": 0.85,
+      "hueco": 1.0,
+      "comparativa": 0.8333333333333334,
+      "extractiva": 0.6666666666666666
+    },
+    "n_por_familia": {
+      "numerica": 8,
+      "total": 20,
+      "hueco": 3,
+      "comparativa": 6,
+      "extractiva": 6
+    },
+    "recall_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.25,
+      "10": 0.25
+    },
+    "mrr": 0.05833333333333333,
+    "coste_medio_usd": 0.018049125,
+    "latencia_media_s": 22.25621191,
+    "llamadas_por_pregunta": 2.75,
+    "tasa_camino_correcto": 1.0,
+    "tasa_acierto_por_camino_equivocado": 0.0,
+    "tasa_intervencion_guardarrail": 0.2,
+    "tasa_recuperacion_guardarrail": 0.75,
+    "alucinaciones_sobre_hueco": 0,
+    "tasa_abstencion_indebida": 0.0
+  }
+}

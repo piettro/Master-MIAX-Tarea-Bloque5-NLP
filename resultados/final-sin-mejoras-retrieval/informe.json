@@ -1,0 +1,2064 @@
+{
+  "etiqueta": "final-sin-mejoras-retrieval",
+  "fecha": "2026-09-24T09:33:37.338679Z",
+  "ruta_preguntas": "golden\\golden_set.jsonl",
+  "modelo": "google/gemini-3.8-flash",
+  "proveedor": "openrouter",
+  "commit": "27e7369",
+  "configuracion": {
+    "sistema": "agente final (fase 4)",
+    "modelo": "openrouter:google/gemini-3.8-flash",
+    "en_reserva": false,
+    "limite_llamadas": 8,
+    "guardarrail_xbrl": true,
+    "reintentos_guardarrail": 1,
+    "version_prompt": "v2",
+    "origen_coste": "estimado con miax_s2.PRECIOS_OPENROUTER",
+    "retrieval": {
+      "recuperador": "denso",
+      "filtro_metadatos": false,
+      "reescritura_consulta": false,
+      "reordenacion": false,
+      "fusion_reordenacion": false,
+      "rrf_k": 60,
+      "k_por_defecto": 5
+    },
+    "max_llamadas_herramienta": 8,
+    "tolerancia_cifra": "0.500% relativo o 1 en valor absoluto, lo que sea mayor",
+    "normalizacion_cita": "NFKC; comillas tipográficas y guiones largos a ASCII; espacios sin ruptura, tabuladores y saltos de línea colapsados a un espacio; recorte de extremos. Se conservan mayúsculas y puntuación.",
+    "tiempo_maximo_s": 180.0,
+    "puesto_del_ancla": {
+      "g-r-005": null,
+      "g-r-006": null,
+      "g-r-007": null,
+      "g-r-008": null,
+      "g-r-009": null,
+      "g-r-010": null,
+      "g-r-011": 5,
+      "g-r-012": null,
+      "g-r-017": null,
+      "g-r-018": null,
+      "g-r-019": 4,
+      "g-r-020": 4
+    },
+    "avisos": []
+  },
+  "resultados": [
+    {
+      "pregunta_id": "g-r-001",
+      "familia": "numerica",
+      "es_hueco": true,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El pasivo total de Amazon para el ejercicio fiscal 2025 no se encuentra reportado en el corpus, ya que Amazon no etiqueta dicha magnitud bajo la taxonomía US-GAAP (concepto 'Liabilities'). Conforme a los criterios metodológicos, no se permite estimar ni deducir la cifra a partir de otros conceptos reportados.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "AMZN",
+        "ejercicio": 2025,
+        "fuente": "ninguna",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "Liabilities",
+        "motivo_sin_dato": "AMZN no reporta ni etiqueta el concepto de pasivo total ('Liabilities') en la taxonomía US-GAAP para el ejercicio fiscal 2025. Al tratarse de una omisión de etiquetado en US-GAAP, el dato no existe formalmente en el corpus y no debe estimarse a partir de otras magnitudes (como restar patrimonio neto al activo total)."
+      },
+      "traza": {
+        "pregunta": "¿Cuál era el pasivo total de Amazon al cierre de su ejercicio fiscal 2025?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "AMZN",
+              "concept": "Liabilities",
+              "fiscal_year": 2025
+            },
+            "resultado": "AMZN NO reporta 'Liabilities' en us-gaap. No es un error de escritura ni una laguna del corpus: esa compañía no etiqueta esa magnitud, así que el dato NO EXISTE y no debe estimarse a partir de otras cifras. Responde que no está en el corpus, con fuente=\"ninguna\" y cifra=null.\nConceptos que AMZN sí reporta en FY2025: Assets, CashAndCashEquivalentsAtCarryingValue, EarningsPerShareBasic, EarningsPerShareDiluted, NetCashProvidedByUsedInOperatingActivities, NetIncomeLoss, OperatingIncomeLoss, RevenueFromContractWithCustomerExcludingAssessedTax, StockholdersEquity",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9121,
+          "tokens_salida": 918,
+          "coste_usd": 0.01028325
+        },
+        "latencia_s": 25.508479699999953,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:26:33.550697Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "declaró que el dato no está en el corpus",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-002",
+      "familia": "numerica",
+      "es_hueco": true,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio bruto de Meta para el ejercicio fiscal 2025 no está en el corpus, ya que la compañía no reporta ni etiqueta esta magnitud (GrossProfit) en sus estados financieros bajo US-GAAP.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "META",
+        "ejercicio": 2025,
+        "fuente": "ninguna",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "GrossProfit",
+        "motivo_sin_dato": "Meta Platforms, Inc. no etiqueta ni reporta la magnitud de beneficio bruto ('GrossProfit') en la taxonomía US-GAAP en su informe 10-K para el ejercicio 2025."
+      },
+      "traza": {
+        "pregunta": "¿Cuál fue el beneficio bruto de Meta en el ejercicio 2025?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "concept": "GrossProfit",
+              "fiscal_year": 2025,
+              "ticker": "META"
+            },
+            "resultado": "META NO reporta 'GrossProfit' en us-gaap. No es un error de escritura ni una laguna del corpus: esa compañía no etiqueta esa magnitud, así que el dato NO EXISTE y no debe estimarse a partir de otras cifras. Responde que no está en el corpus, con fuente=\"ninguna\" y cifra=null.\nConceptos que META sí reporta en FY2025: Assets, CashAndCashEquivalentsAtCarryingValue, EarningsPerShareBasic, EarningsPerShareDiluted, Liabilities, NetCashProvidedByUsedInOperatingActivities, NetIncomeLoss, OperatingIncomeLoss, ResearchAndDevelopmentExpense, RevenueFromContractWithCustomerExcludingAssessedTax, StockholdersEquity",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9149,
+          "tokens_salida": 905,
+          "coste_usd": 0.0102555
+        },
+        "latencia_s": 9.760816899999554,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:26:43.321802Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "declaró que el dato no está en el corpus",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-003",
+      "familia": "numerica",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio neto de NVIDIA en el ejercicio fiscal 2024, que finalizó el 28 de enero de 2024, fue de 29.760.000.000 USD.",
+        "cifra": 29760000000.0,
+        "unidad": "USD",
+        "ticker": "NVDA",
+        "ejercicio": 2024,
+        "fuente": "xbrl",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "NetIncomeLoss",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuál fue el beneficio neto de NVIDIA en el ejercicio fiscal que cerró el 28 de enero de 2024?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "NVDA",
+              "fiscal_year": 2024,
+              "concept": "NetIncomeLoss"
+            },
+            "resultado": "NVDA FY2024 · NetIncomeLoss = 29,760,000,000 USD (cierre de ejercicio 2024-01-28, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9133,
+          "tokens_salida": 516,
+          "coste_usd": 0.00878475
+        },
+        "latencia_s": 15.171334700000443,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:26:58.493600Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-004",
+      "familia": "numerica",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "Los ingresos de NVIDIA en su ejercicio fiscal 2025 fueron de 130.497.000.000 USD.",
+        "cifra": 130497000000.0,
+        "unidad": "USD",
+        "ticker": "NVDA",
+        "ejercicio": 2025,
+        "fuente": "xbrl",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "Revenues",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuáles fueron los ingresos de NVIDIA en su ejercicio fiscal 2025?",
+        "llamadas": [
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "ticker": "NVDA",
+              "concept": "Revenues"
+            },
+            "resultado": "NVDA FY2025 · Revenues = 130,497,000,000 USD (cierre de ejercicio 2025-01-26, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 5578,
+          "tokens_salida": 475,
+          "coste_usd": 0.00596475
+        },
+        "latencia_s": 6.8540193000008,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:27:05.349606Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-005",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El flujo de caja de las actividades de explotación de Amazon en 2025 reportado en XBRL fue de 139.514.000.000 USD, frente a los 115.877.000.000 USD de 2024, lo que representa un aumento de 23.637.000.000 USD. La compañía atribuye este incremento a un aumento en los ingresos netos (excluyendo gastos no monetarios) y a cambios en el capital de trabajo.",
+        "cifra": 139514000000.0,
+        "unidad": "USD",
+        "ticker": "AMZN",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "The increase in operating cash flow in 2025, compared to the prior year, was due to an increase in net income (loss), excluding non-cash expenses, and changes in working capital.",
+        "chunk_id": "AMZN-2025-7-0007",
+        "concept_xbrl": "NetCashProvidedByUsedInOperatingActivities",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuánto aumentó el flujo de caja de las actividades de explotación de Amazon entre 2024 y 2025, y a qué lo atribuye la compañía?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "AMZN",
+              "concept": "NetCashProvidedByUsedInOperatingActivities",
+              "fiscal_year": 2024
+            },
+            "resultado": "AMZN FY2024 · NetCashProvidedByUsedInOperatingActivities = 115,877,000,000 USD (cierre de ejercicio 2024-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "AMZN",
+              "concept": "NetCashProvidedByUsedInOperatingActivities",
+              "fiscal_year": 2025
+            },
+            "resultado": "AMZN FY2025 · NetCashProvidedByUsedInOperatingActivities = 139,514,000,000 USD (cierre de ejercicio 2025-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "query": "operating cash flows increased primarily due to net income working capital",
+              "k": 5,
+              "ticker": "AMZN",
+              "item": "7"
+            },
+            "resultado": "[AMZN-2025-7-0007] AMZN FY2025 Item 7 (similitud 0.748) · contiene tabla\nLiquidity and Capital Resources\n\nCash flow information is as follows (in millions):\n\nYear Ended December 31,\n2024\t\t2025\nCash provided by (used in):\nOperating activities\t$\t115,877\t\t\t$\t139,514\nInvesting activities\t(94,342)\t\t\t(142,545)\nFinancing activities\t(11,812)\t\t\t9,661\n\nOur principal sources of liquidity are cash flows generated from operations and our cash, cash equivalents, and marketable securities balances, which, at fair value, were $101.2 billion and $123.0 billion as of December 31, 2024 and 2025. Amounts held in foreign currencies were $25.5 billion and $29.7 billion as of December 31, 2024 and 2025. Our foreign currency balances include British Pounds, Canadian Dollars, Euros, Indian Rupees, and Japanese Yen.\n\nCash provided by (used in) operating activities was $115.9 billion and $139.5 billion in 2024 and 2025. Our operating cash flows result primarily from cash received from our consumer, seller, developer, enterprise, and content creator customers, and advertisers, offset by cash payments we make for products and services, employee compensation, payment processing and related transaction costs, operating leases, and interest payments. Cash received from our customers and other activities generally corresponds to our net sales. The increase in operating cash flow in 2025, compared to the prior year, was due to an increase in net income (loss), excluding non-cash expenses, and changes in working capital. Working capital at any specific\n\npoint in time is subject to many variables, including variability in demand, inventory management and category expansion, the timing of cash receipts and payments, customer and vendor payment terms, and fluctuations in foreign exchange rates.\n\nCash provided by (used in) investing activities corresponds with cash capital expenditures, including leasehold improvements, incentives received from property and equipment vendors, proceeds from asset sales, c",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 23314,
+          "tokens_salida": 2184,
+          "coste_usd": 0.0256755
+        },
+        "latencia_s": 43.100847099999555,
+        "intervenciones_guardarrail": 1,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:27:48.451967Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-006",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El gasto en I+D de Apple en el ejercicio fiscal 2025 fue de 34.550.000.000 USD, frente a los 31.370.000.000 USD reportados en el ejercicio fiscal 2024, lo que representa un crecimiento de 3.180.000.000 USD (un aumento del 10,14%). Según la dirección de la compañía en el Item 7 (MD&A), este incremento fue impulsado principalmente por el aumento en los gastos asociados a la plantilla (headcount-related expenses) y en los costes relacionados con infraestructura.",
+        "cifra": 34550000000.0,
+        "unidad": "USD",
+        "ticker": "AAPL",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "The growth in R&D expense during 2025 compared to 2024 was primarily driven by increases in headcount-related expenses and infrastructure-related costs.",
+        "chunk_id": "AAPL-2025-7-0005",
+        "concept_xbrl": "ResearchAndDevelopmentExpense",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuánto creció el gasto en I+D de Apple entre los ejercicios fiscales 2024 y 2025, y qué explica ese crecimiento según la dirección?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2024,
+              "ticker": "AAPL",
+              "concept": "ResearchAndDevelopmentExpense"
+            },
+            "resultado": "AAPL FY2024 · ResearchAndDevelopmentExpense = 31,370,000,000 USD (cierre de ejercicio 2024-09-28, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "concept": "ResearchAndDevelopmentExpense",
+              "fiscal_year": 2025,
+              "ticker": "AAPL"
+            },
+            "resultado": "AAPL FY2025 · ResearchAndDevelopmentExpense = 34,550,000,000 USD (cierre de ejercicio 2025-09-27, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "item": "7",
+              "ticker": "AAPL",
+              "query": "Research and Development expense increased headcount-related expenses"
+            },
+            "resultado": "[AAPL-2025-7-0005] AAPL FY2025 Item 7 (similitud 0.731) · contiene tabla\nOperating Expenses\n\nOperating expenses for 2025, 2024 and 2023 were as follows (dollars in millions):\n\n2025\t\tChange\t\t2024\t\tChange\t\t2023\nResearch and development\t$\t34,550\t\t\t10\t%\t\t$\t31,370\t\t\t5\t%\t\t$\t29,915\nPercentage of total net sales\t8\t%\t\t\t\t8\t%\t\t\t\t8\t%\nSelling, general and administrative\t$\t27,601\t\t\t6\t%\t\t$\t26,097\t\t\t5\t%\t\t$\t24,932\nPercentage of total net sales\t7\t%\t\t\t\t7\t%\t\t\t\t7\t%\nTotal operating expenses\t$\t62,151\t\t\t8\t%\t\t$\t57,467\t\t\t5\t%\t\t$\t54,847\nPercentage of total net sales\t15\t%\t\t\t\t15\t%\t\t\t\t14\t%\n\nResearch and Development\n\nThe growth in R&D expense during 2025 compared to 2024 was primarily driven by increases in headcount-related expenses and infrastructure-related costs.\n\nSelling, General and Administrative\n\nThe growth in selling, general and administrative expense during 2025 compared to 2024 was primarily driven by increases in headcount-related expenses and variable selling expenses.\n\nApple Inc. | 2025 Form 10-K | 24\n\n---\n\n[AAPL-2025-7-0009] AAPL FY2025 Item 7 (similitud 0.642)\nDisaggregation of Income Statement Expenses\n\nIn November 2024, the FASB issued ASU No. 2024-03, Income Statement—Reporting Comprehensive Income—Expense Disaggregation Disclosures (Subtopic 220-40): Disaggregation of Income Statement Expenses (“ASU 2024-03”) and in January 2025, the FASB issued ASU No. 2025-01, Income Statement—Reporting Comprehensive Income—Expense Disaggregation Disclosures (Subtopic 220-40): Clarifying the Effective Date, which clarified the effective date of ASU 2024-03. ASU 2024-03 will require the Company to disclose the amounts of purchases of inventory, employee compensation, depreciation and intangible asset amortization, as applicable, included in certain expense captions in the Consolidated Statements of Operations, as well as qualitatively describe remaining amounts included in those captions. ASU 2024-03 will also require the Company to disclose both the amount and the Company’s definition of sel",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 26078,
+          "tokens_salida": 5358,
+          "coste_usd": 0.039651
+        },
+        "latencia_s": 59.974685999999565,
+        "intervenciones_guardarrail": 1,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:28:48.434629Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-007",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": false,
+      "acierto": false,
+      "respuesta": {
+        "respuesta": "En el apartado de riesgo de mercado (Item 7A) de su 10-K de FY2025, Microsoft declara estar expuesta a riesgos económicos derivados de los tipos de cambio de divisas (foreign exchange rates), los tipos de interés (interest rates), el riesgo de crédito (credit risk) y los precios de las acciones/renta variable (equity prices).",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "MSFT",
+        "ejercicio": 2025,
+        "fuente": "texto",
+        "cita": "We are exposed to economic risk from foreign exchange rates, interest rates, credit risk, and equity prices.",
+        "chunk_id": null,
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿A qué riesgos económicos dice Microsoft estar expuesto en el apartado de riesgo de mercado de su 10-K de FY2025?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "item": "7A",
+              "query": "market risk economic risks exposure interest rate foreign currency equity price",
+              "ticker": "MSFT",
+              "fiscal_year": 2025
+            },
+            "resultado": "[MSFT-2025-7A-0000] MSFT FY2025 Item 7A (similitud 0.869) · contiene tabla\nITEM 7A. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK\n\nRISKS\n\nWe are exposed to economic risk from foreign exchange rates, interest rates, credit risk, and equity prices. We use derivatives instruments to manage these risks, however, they may still impact our consolidated financial statements.\n\nForeign Currencies\n\nCertain forecasted transactions, assets, and liabilities are exposed to foreign currency risk. We monitor our foreign currency exposures daily to maximize the economic effectiveness of our foreign currency positions, including hedges. Principal currency exposures include the Euro, Japanese yen, British pound, Canadian dollar, and Australian dollar.\n\nInterest Rate\n\nSecurities held in our fixed-income portfolio are subject to different interest rate risks based on their maturities. We manage the average maturity of the fixed-income portfolio to achieve economic returns that correlate to certain global fixed-income indices.\n\nCredit\n\nOur fixed-income portfolio is diversified and consists primarily of investment-grade securities. We manage credit exposures relative to broad-based indices to facilitate portfolio diversification.\n\nEquity\n\nSecurities held in our equity investments portfolio are subject to price risk.\n\nSENSITIVITY ANALYSIS\n\nThe following table sets forth the potential loss in future earnings or fair values, including associated derivatives, resulting from hypothetical changes in relevant market rates or prices:\n\n(In millions)\nRisk Categories\t\tHypothetical Change\t\tJune 30, 2025\t\t\tImpact\nForeign currency – Revenue\t\t10% decrease in foreign exchange rates\t\t$\t(11,596\t)\t\t\tEarnings\nForeign currency – Investments\t\t10% decrease in foreign exchange rates\t\t\t(17\t)\t\t\tFair Value\nInterest rate\t\t100 basis point increase in U.S. treasury interest rates\t\t\t(1,415\t)\t\t\tFair Value\nCredit\t\t100 basis point increase in credit spreads\t\t\t(436\t)\t\t\tFair Value\nEquity\t\t10% decrease in equity",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9525,
+          "tokens_salida": 901,
+          "coste_usd": 0.0105225
+        },
+        "latencia_s": 13.277575099999922,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:29:01.721181Z"
+      },
+      "cita": {
+        "veredicto": "fallo",
+        "motivo": "sin_chunk_id: la respuesta cita texto sin decir de qué fragmento",
+        "detalle": {
+          "sin_chunk_id": "la respuesta cita texto sin decir de qué fragmento"
+        }
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-008",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "Apple indica en sus factores de riesgo de FY2025 que cuando un componente o producto utiliza nuevas tecnologías, pueden presentarse restricciones iniciales de capacidad hasta que los rendimientos (yields) de los proveedores hayan madurado o sus capacidades de fabricación hayan aumentado.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "AAPL",
+        "ejercicio": 2025,
+        "fuente": "texto",
+        "cita": "When a component or product uses new technologies, initial capacity constraints may exist until the suppliers’ yields have matured or their manufacturing capacities have increased.",
+        "chunk_id": "AAPL-2025-1A-0008",
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Qué dice Apple en sus factores de riesgo de FY2025 sobre la capacidad de suministro cuando un componente usa tecnologías nuevas?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "supply capacity component new technologies",
+              "item": "1A",
+              "fiscal_year": 2025,
+              "ticker": "AAPL"
+            },
+            "resultado": "[AAPL-2025-1A-0009] AAPL FY2025 Item 1A (similitud 0.713)\nmay exist until the suppliers’ yields have matured or their manufacturing capacities have increased. The Company may not be able to extend or renew agreements for the supply of components on similar terms, or at all, and may not be successful in obtaining sufficient quantities from its suppliers in a timely manner, or in identifying and obtaining sufficient quantities from an alternative source. In addition, component suppliers may fail, be subject to consolidation within a particular industry, or decide to concentrate on the production of common components instead of components customized to meet the Company’s requirements, further limiting the Company’s ability to obtain sufficient quantities of components on commercially reasonable terms, or at all. Therefore, the Company remains subject to significant risks of supply shortages and price increases that can materially adversely affect its business, results of operations, financial condition and stock price.\n\n---\n\n[AAPL-2025-1A-0008] AAPL FY2025 Item 1A (similitud 0.691)\nrelies on single-source partners in the U.S., Asia and Europe to supply and manufacture many components, and on partners primarily located in Asia, for final assembly of substantially all of the Company’s hardware products. The Company has also outsourced much of its transportation and logistics management. While these arrangements can lower operating costs, they also reduce the Company’s direct control over production and distribution. Such diminished control has from time to time had, and may in the future have, an adverse effect on the cost, quality or quantity of products manufactured or services provided, or adversely affect the Company’s flexibility to respond to changing conditions. Although arrangements with these partners may contain provisions for product defect expense reimbursement, the Company generally remains responsible to the consumer for warranty and out-of-warranty service",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 11439,
+          "tokens_salida": 787,
+          "coste_usd": 0.0115305
+        },
+        "latencia_s": 12.834484699999848,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:29:14.572093Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-009",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": false,
+      "acierto": false,
+      "respuesta": {
+        "respuesta": "NVIDIA declara en su informe 10-K para el ejercicio fiscal 2024 que no fabrica, ensambla, prueba ni empaqueta sus productos internamente. En su lugar, depende de fundiciones externas (foundries) para fabricar sus obleas de semiconductores utilizando los equipos y técnicas de dichas fundiciones, y contrata a subcontratistas independientes para el ensamblaje, prueba y empaquetado de sus productos.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "NVDA",
+        "ejercicio": 2024,
+        "fuente": "texto",
+        "cita": "We depend on foundries to manufacture our semiconductor wafers using their fabrication equipment and techniques. We do not assemble, test, or package our products, but instead contract with independent subcontractors.",
+        "chunk_id": "NVDA-2024-1A-0011",
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Qué declara NVIDIA en su 10-K del ejercicio fiscal 2024 sobre quién fabrica y ensambla sus productos?",
+        "llamadas": [
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "fiscal_year": 2024,
+              "ticker": "NVDA",
+              "query": "manufacture assembly fabricate foundry suppliers products"
+            },
+            "resultado": "[NVDA-2024-1A-0012] NVDA FY2024 Item 1A (similitud 0.703)\nour policies and expectations and emerging regulatory requirements;\n\n•limited number and geographic concentration of global suppliers, foundries, contract manufacturers, assembly and test providers and memory manufacturers;\n\n•loss of a supplier and additional expense and/or production delays as a result of qualifying a new foundry or subcontractor and commencing volume production or testing in the event of a loss, addition or change of a supplier;\n\n•lack of direct control over product quantity, quality and delivery schedules;\n\n•suppliers or their suppliers failing to supply high quality products and/or making changes to their products without our qualification;\n\n•delays in product shipments, shortages, a decrease in product quality and/or higher expenses in the event our subcontractors or foundries prioritize our competitors’ or other customers’ orders over ours;\n\n•requirements to place orders that are not cancellable upon changes in demand or requirements to prepay for supply in advance;\n\n•low manufacturing yields resulting from a failure in our product design or a foundry’s proprietary process technology; and\n\n•disruptions in manufacturing, assembly and other processes due to closures related to heat waves, earthquakes, fires, or other natural disasters and electricity conservation efforts.\n\nDefects in our products have caused and could cause us to incur significant expenses to remediate, which can damage our reputation and cause us to lose market share.\n\nOur hardware and software product and service offerings are complex. They have in the past and may in the future contain defects or security vulnerabilities or experience failures or unsatisfactory performance due to any number of issues in design, fabrication, packaging, materials, bugs and/or use within a system. These risks may increase as our products are introduced into new devices, markets, technologies and applications or as new versions are release",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "TSMC Taiwan Semiconductor Manufacturing Company foundries",
+              "fiscal_year": 2024,
+              "ticker": "NVDA"
+            },
+            "resultado": "[NVDA-2024-1A-0012] NVDA FY2024 Item 1A (similitud 0.596)\nour policies and expectations and emerging regulatory requirements;\n\n•limited number and geographic concentration of global suppliers, foundries, contract manufacturers, assembly and test providers and memory manufacturers;\n\n•loss of a supplier and additional expense and/or production delays as a result of qualifying a new foundry or subcontractor and commencing volume production or testing in the event of a loss, addition or change of a supplier;\n\n•lack of direct control over product quantity, quality and delivery schedules;\n\n•suppliers or their suppliers failing to supply high quality products and/or making changes to their products without our qualification;\n\n•delays in product shipments, shortages, a decrease in product quality and/or higher expenses in the event our subcontractors or foundries prioritize our competitors’ or other customers’ orders over ours;\n\n•requirements to place orders that are not cancellable upon changes in demand or requirements to prepay for supply in advance;\n\n•low manufacturing yields resulting from a failure in our product design or a foundry’s proprietary process technology; and\n\n•disruptions in manufacturing, assembly and other processes due to closures related to heat waves, earthquakes, fires, or other natural disasters and electricity conservation efforts.\n\nDefects in our products have caused and could cause us to incur significant expenses to remediate, which can damage our reputation and cause us to lose market share.\n\nOur hardware and software product and service offerings are complex. They have in the past and may in the future contain defects or security vulnerabilities or experience failures or unsatisfactory performance due to any number of issues in design, fabrication, packaging, materials, bugs and/or use within a system. These risks may increase as our products are introduced into new devices, markets, technologies and applications or as new versions are release",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 16505,
+          "tokens_salida": 1185,
+          "coste_usd": 0.0168225
+        },
+        "latencia_s": 19.570999999999913,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:29:34.153887Z"
+      },
+      "cita": {
+        "veredicto": "fallo",
+        "motivo": "no_respalda_ancla: la cita no está a menos de 600 caracteres del ancla",
+        "detalle": {
+          "no_respalda_ancla": "la cita no está a menos de 600 caracteres del ancla"
+        }
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "search_filings",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-010",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "Según los factores de riesgo de Amazon en su 10-K de 2025 (Item 1A), algunos competidores actuales y potenciales pueden tener ventajas como mayores recursos, historiales operativos más largos, una mayor base de clientes y un mayor reconocimiento de marca, en particular en relación con productos y servicios recién lanzados y en nuevas regiones geográficas. Además, la compañía señala que los competidores pueden negociar mejores condiciones con los proveedores, aplicar políticas de precios más agresivas y destinar mayores recursos a tecnología, infraestructura, procesamiento de pedidos (fulfillment) y marketing.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "AMZN",
+        "ejercicio": 2025,
+        "fuente": "texto",
+        "cita": "Some of our current and potential competitors have greater resources, longer histories, more customers, and/or greater brand recognition, particularly with our newly-launched products and services and in our newer geographic regions.",
+        "chunk_id": "AMZN-2025-1A-0001",
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "Según los factores de riesgo de Amazon de 2025, ¿qué ventajas pueden tener sus competidores frente a ella?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "competitors advantages greater resources longer operating histories",
+              "fiscal_year": 2025,
+              "item": "1A",
+              "ticker": "AMZN",
+              "k": 5
+            },
+            "resultado": "[AMZN-2025-1A-0001] AMZN FY2025 Item 1A (similitud 0.738)\nWe Face Intense Competition\n\nOur businesses are rapidly evolving and intensely competitive, and we have many competitors across geographies, including cross-border competition, and in different industries, including physical, e-commerce, and omnichannel retail, e-commerce services, web and infrastructure computing services, electronic devices, digital content, advertising, grocery, healthcare, communications, and transportation and logistics services. Some of our current and potential competitors have greater resources, longer histories, more customers, and/or greater brand recognition, particularly with our newly-launched products and services and in our newer geographic regions. They may secure better terms from vendors, adopt more aggressive pricing, and devote more resources to technology, infrastructure, fulfillment, and marketing.\n\nCompetition continues to intensify, including with the development of new business models and the entry of new and well-funded competitors, and as our competitors enter into business combinations or alliances and established companies in other market segments expand to become competitive with our business. In addition, new and enhanced technologies, including search, web and infrastructure computing services, practical applications of artificial intelligence and machine learning, digital content, satellites, and electronic devices continue to increase our competition. The internet and other technologies including artificial intelligence facilitate competitive entry and comparison shopping, which enhances the ability of new, smaller, or lesser-known businesses to compete against us. As a result of competition, our product and service offerings may not be successful, we may fail to gain or may lose business, and we may be required to increase our spending or lower prices, any of which could materially reduce our sales and profits.\n\nOur Expansion into New Products, Services, Tec",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 11438,
+          "tokens_salida": 1403,
+          "coste_usd": 0.01383975
+        },
+        "latencia_s": 14.629494600000726,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:29:49.243769Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-011",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "En su informe 10-K correspondiente al ejercicio fiscal 2025, Alphabet indica que la Orden Ejecutiva de la Casa Blanca («Removing Barriers to American Leadership in Artificial Intelligence») prioriza la desregulación, al tiempo que su Plan de Acción de IA enfatiza acelerar el liderazgo estadounidense en innovación.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "GOOGL",
+        "ejercicio": 2025,
+        "fuente": "texto",
+        "cita": "At the same time, the White House's Executive Order, Removing Barriers to American Leadership in Artificial Intelligence, prioritizes deregulation, while its AI Action Plan emphasizes accelerating American innovation leadership.",
+        "chunk_id": "GOOGL-2025-1A-0023",
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Qué dice Alphabet en su 10-K de 2025 sobre la orden ejecutiva estadounidense en materia de inteligencia artificial?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "ticker": "GOOGL",
+              "k": 5,
+              "query": "executive order artificial intelligence AI",
+              "fiscal_year": 2025,
+              "item": "1A"
+            },
+            "resultado": "[GOOGL-2025-1A-0023] GOOGL FY2025 Item 1A (similitud 0.672) · contiene tabla\nperiod (although certain obligations have already taken effect). The EU AI Act introduces various requirements for AI systems and models placed on the market in the EU, including specific transparency, safety, and copyright requirements for general purpose AI systems and the models on which those systems are based. Various countries, including Brazil, India, Japan, South Korea, Singapore, and Vietnam, have also enacted or are considering enacting regulations focused on AI. In the US, an increasing amount of legislative and regulatory activity regarding AI is taking place at the state level. In 2025, state legislatures considered more than 1,000 AI-related bills, including on fundamental model research and development, synthetic media, algorithmic decision-making, and many others, and took a variety of approaches to AI regulation. For instance, in 2025, California and New York passed the Transparency in Frontier Artificial Intelligence Act and the Responsible AI Safety and Education Act, respectively, each of which imposes safety and reporting obligations on developers of frontier models. At the same time, the White House's Executive Order, Removing Barriers to American Leadership in Artificial Intelligence, prioritizes deregulation, while its AI Action Plan emphasizes accelerating American innovation leadership.\n\n17.\n\nTable of Contents\tAlphabet Inc.\n\n•Data privacy, collection, processing, and portability: Laws and regulations further restricting the collection, processing, or sharing of user or advertising-related data, including privacy and data protection laws; laws affecting the processing of children's data (as discussed further below), data breach notification laws; laws limiting data transfers (including data localization laws); laws limiting use of data for AI training; and laws requiring data portability.\n\n•Copyright and other intellectual property: Copyright and related laws, inclu",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "k": 5,
+              "item": "1A",
+              "ticker": "GOOGL",
+              "fiscal_year": 2025,
+              "query": "\"Executive Order\" \"Removing Barriers\""
+            },
+            "resultado": "[GOOGL-2025-1A-0024] GOOGL FY2025 Item 1A (similitud 0.610)\nbeing challenged before courts in the EU, which could harm some aspects of our business.\n\n•Content moderation: Various laws covering content moderation and removal, and related disclosure obligations, such as the EU's Digital Services Act, Florida's Senate Bill 7072 and Texas' House Bill 20, and laws and proposed legislation in Singapore, Australia, and the United Kingdom (UK) that impose penalties for failure to remove certain types of content or require disclosure of information about the operation of our services and algorithms, which may make it harder for services like Google Search and YouTube to detect and limit low-quality, deceptive, or harmful content, or, on the other hand, may impinge on the rights of free expression and access to content. Additionally, new regulations apply to online child safety, including access and content restrictions as well as other limitations for minors, which may also conflict with rights of free expression and access to information. These regulations could result in our having to modify our products and services and monitor minors' experiences on our products and services.\n\n•Consumer protection: Consumer protection laws, including the EU's New Deal for Consumers, which could result in monetary penalties and create a range of new compliance obligations.\n\nIn addition, the applicability and scope of these and other laws and regulations, as interpreted by courts, regulators, or administrative bodies, remain uncertain and could be interpreted in ways that harm our business. For example, we rely on statutory safe harbors, like those set forth in the Digital Millennium Copyright Act and Section 230 of the Communications Decency Act in the US and the Digital Services Act in Europe, to protect against liability for various linking, caching, ranking, recommending, and hosting activities. Legislation or court rulings affecting these safe harbors may harm us and may impose signif",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "ticker": "GOOGL",
+              "fiscal_year": 2025,
+              "k": 3,
+              "query": "\"Executive Order\" \"Removing Barriers\"",
+              "item": "7"
+            },
+            "resultado": "[GOOGL-2025-7-0003] GOOGL FY2025 Item 7 (similitud 0.548)\nface an evolving regulatory environment, and we are subject to claims, lawsuits, investigations, and other forms of potential legal liability, which could affect our business practices and financial results.\n\nChanges in social, political, economic, tax, and regulatory conditions or in laws and policies governing a wide range of topics and related legal matters, including investigations, lawsuits, and regulatory actions, have resulted in fines and caused us to change our business practices. As the regulatory environment continues to evolve, we may continue to incur fines and we expect increased costs associated with compliance, modifications to our products and services, and limitations on our ability to pursue certain business practices. For additional information, see Part I, Item 1A Risk Factors and Legal Matters in Note 10 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K.\n\n---\n\n[GOOGL-2025-7-0011] GOOGL FY2025 Item 7 (similitud 0.521)\n$91.4 billion for the year ended December 31, 2025.\n\n•As of December 31, 2025, we had 190,820 employees.\n\nWe are monitoring ongoing developments surrounding international trade and the macroeconomic environment. As a result of volatility in international trade and financial markets, we may experience direct and indirect effects on our business, operations, and financial results. Our past results may not be indicative of our future performance, and our financial results may differ materially from historical trends.\n\n---\n\n[GOOGL-2025-7-0017] GOOGL FY2025 Item 7 (similitud 0.515) · contiene tabla\nProvision for Income Taxes\n\nThe following table presents provision for income taxes (in millions, except effective tax rate):\n\nYear Ended December 31,\n2024\t\t2025\nIncome before provision for income taxes\t$\t119,815\t\t\t$\t158,826\nProvision for income taxes\t$\t19,697\t\t\t$\t26,656\nEffective tax rate\t16.4\t%\t\t16.8\t%\n\nThe effective tax rate incr",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 29183,
+          "tokens_salida": 1391,
+          "coste_usd": 0.0271035
+        },
+        "latencia_s": 23.36027749999994,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:30:12.612574Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "search_filings",
+            "search_filings",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-012",
+      "familia": "extractiva",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "En su apartado de riesgo de mercado (Item 7A) de 2025, Alphabet determina que, considerando las tendencias históricas de los tipos de cambio, es razonablemente posible experimentar variaciones adversas del 10% en los tipos de cambio.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "GOOGL",
+        "ejercicio": 2025,
+        "fuente": "texto",
+        "cita": "Considering historical trends in foreign exchange rates, we determined that it was reasonably possible that adverse changes in exchange rates of 10% could be experienced.",
+        "chunk_id": "GOOGL-2025-7A-0000",
+        "concept_xbrl": null,
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Qué variación adversa de los tipos de cambio considera razonablemente posible Alphabet en su apartado de riesgo de mercado de 2025?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "item": "7A",
+              "ticker": "GOOGL",
+              "query": "foreign exchange rate reasonably possible adverse change market risk",
+              "fiscal_year": 2025
+            },
+            "resultado": "[GOOGL-2025-7A-0000] GOOGL FY2025 Item 7A (similitud 0.807) · contiene tabla\nITEM 7A.QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK\n\nWe are exposed to financial market risks, including changes in foreign currency exchange rates, interest rates, and equity investment risks.\n\nForeign Currency Exchange Risk\n\nWe transact business globally in multiple currencies. International revenues, foreign-denominated monetary assets and liabilities, and investments in foreign subsidiaries expose us to the risk of fluctuations in foreign exchange rates against the US dollar. Principal currency exposures include the Australian dollar, British pound, Canadian dollar, Euro, and Japanese yen.\n\n41.\n\nTable of Contents\tAlphabet Inc.\n\nWe monitor our foreign currency exposures and hedge foreign exchange risks with derivative and non-derivative instruments, including forwards, options (including collars), cross-currency swaps, and foreign currency-denominated debt. Gains or losses on these foreign currency exposures are generally offset by corresponding gains or losses on the derivative and non-derivative instruments.\n\nConsidering historical trends in foreign exchange rates, we determined that it was reasonably possible that adverse changes in exchange rates of 10% could be experienced. We performed a sensitivity analysis on our foreign currency exposures to estimate the potential impact of this adverse 10% change. The estimated effects on our financial position would be as follows (in millions):\n\nAs of December 31,\nImpact\t\t2024\t\t2025\nForeign currency risk\nForeign denominated monetary assets and liabilities (1)\tOI&E\t\t$\t135\t\t\t$\t671\nCash flow hedges of foreign currency revenue (2)\tAOCI\t\t$\t1,627\t\t\t$\t2,096\nNet investment hedges of investments in foreign subsidiaries (3)\tAOCI\t\t$\t660\t\t\t$\t2,942\n\n(1)After consideration of the effect of derivative contracts.\n\n(2)The change in accumulated other comprehensive income (AOCI) would be expected to offset a corresponding foreign currency change i",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "GOOGL",
+              "fiscal_year": 2025,
+              "concept": "ForeignExchangeRateSensitivityPercentage"
+            },
+            "resultado": "GOOGL no reportó 'ForeignExchangeRateSensitivityPercentage' en FY2025.\nConceptos disponibles para GOOGL FY2025: Assets, CashAndCashEquivalentsAtCarryingValue, EarningsPerShareBasic, EarningsPerShareDiluted, Liabilities, NetCashProvidedByUsedInOperatingActivities, NetIncomeLoss, OperatingIncomeLoss, ResearchAndDevelopmentExpense, Revenues, StockholdersEquity",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 17681,
+          "tokens_salida": 2989,
+          "coste_usd": 0.0244695
+        },
+        "latencia_s": 32.94404629999917,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:30:45.567453Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "no_aplica",
+        "motivo": "la pregunta no pide ninguna cifra",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "search_filings",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-013",
+      "familia": "numerica",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio diluido por acción de NVIDIA en el ejercicio fiscal 2025 fue de 2,94 USD por acción.",
+        "cifra": 2.94,
+        "unidad": "USD/shares",
+        "ticker": "NVDA",
+        "ejercicio": 2025,
+        "fuente": "xbrl",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "EarningsPerShareDiluted",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuál fue el beneficio diluido por acción de NVIDIA en su ejercicio fiscal 2025?",
+        "llamadas": [
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "concept": "EarningsPerShareDiluted",
+              "ticker": "NVDA"
+            },
+            "resultado": "NVDA FY2025 · EarningsPerShareDiluted = 2.94 USD/shares (cierre de ejercicio 2025-01-26, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 5613,
+          "tokens_salida": 422,
+          "coste_usd": 0.00579225
+        },
+        "latencia_s": 6.177408200001082,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:30:51.750389Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-014",
+      "familia": "numerica",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio neto de Amazon en el ejercicio fiscal 2024 fue de 59.248.000.000 USD (aproximadamente 59.248 millones de dólares).",
+        "cifra": 59248000000.0,
+        "unidad": "USD",
+        "ticker": "AMZN",
+        "ejercicio": 2024,
+        "fuente": "xbrl",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "NetIncomeLoss",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuál fue el beneficio neto de Amazon en 2024?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "concept": "NetIncomeLoss",
+              "ticker": "AMZN",
+              "fiscal_year": 2024
+            },
+            "resultado": "AMZN FY2024 · NetIncomeLoss = 59,248,000,000 USD (cierre de ejercicio 2024-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9067,
+          "tokens_salida": 529,
+          "coste_usd": 0.008784
+        },
+        "latencia_s": 15.100793400000839,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:31:06.852879Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-015",
+      "familia": "numerica",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "Los ingresos de Alphabet Inc. en el ejercicio fiscal 2024 fueron de 350.018.000.000 USD.",
+        "cifra": 350018000000.0,
+        "unidad": "USD",
+        "ticker": "GOOGL",
+        "ejercicio": 2024,
+        "fuente": "xbrl",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": "Revenues",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuáles fueron los ingresos de Alphabet en 2024?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2024,
+              "concept": "Revenues",
+              "ticker": "GOOGL"
+            },
+            "resultado": "GOOGL FY2024 · Revenues = 350,018,000,000 USD (cierre de ejercicio 2024-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9017,
+          "tokens_salida": 580,
+          "coste_usd": 0.00893775
+        },
+        "latencia_s": 8.431154199999582,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:31:15.286004Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-016",
+      "familia": "numerica",
+      "es_hueco": true,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El dato no está disponible en el corpus. Amazon no reporta ni etiqueta separadamente los gastos de investigación y desarrollo (ResearchAndDevelopmentExpense) bajo US-GAAP en sus informes financieros XBRL correspondientes al ejercicio fiscal 2025.",
+        "cifra": null,
+        "unidad": null,
+        "ticker": "AMZN",
+        "ejercicio": 2025,
+        "fuente": "ninguna",
+        "cita": null,
+        "chunk_id": null,
+        "concept_xbrl": null,
+        "motivo_sin_dato": "Amazon no reporta ni etiqueta la magnitud de investigación y desarrollo (ResearchAndDevelopmentExpense) bajo taxonomía US-GAAP en sus informes XBRL para el ejercicio 2025."
+      },
+      "traza": {
+        "pregunta": "¿Cuánto gastó Amazon en investigación y desarrollo en 2025?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "concept": "ResearchAndDevelopmentExpense",
+              "ticker": "AMZN"
+            },
+            "resultado": "AMZN NO reporta 'ResearchAndDevelopmentExpense' en us-gaap. No es un error de escritura ni una laguna del corpus: esa compañía no etiqueta esa magnitud, así que el dato NO EXISTE y no debe estimarse a partir de otras cifras. Responde que no está en el corpus, con fuente=\"ninguna\" y cifra=null.\nConceptos que AMZN sí reporta en FY2025: Assets, CashAndCashEquivalentsAtCarryingValue, EarningsPerShareBasic, EarningsPerShareDiluted, NetCashProvidedByUsedInOperatingActivities, NetIncomeLoss, OperatingIncomeLoss, RevenueFromContractWithCustomerExcludingAssessedTax, StockholdersEquity",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 9064,
+          "tokens_salida": 833,
+          "coste_usd": 0.00992175
+        },
+        "latencia_s": 17.609872900000482,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:31:32.899280Z"
+      },
+      "cita": {
+        "veredicto": "no_aplica",
+        "motivo": "ni la pregunta trae ancla ni la respuesta cita",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "declaró que el dato no está en el corpus",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-017",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio bruto (Gross Profit) de Microsoft aumentó de 171.008.000.000 USD en el ejercicio fiscal 2024 a 193.893.000.000 USD en el ejercicio fiscal 2025, lo que supone un incremento de 22.885.000.000 USD (+13,38%). Respecto al porcentaje de margen bruto, la dirección indica que disminuyó ligeramente, impulsado a la baja por Intelligent Cloud y compensado en parte por More Personal Computing; además, señala que el porcentaje de margen bruto de Microsoft Cloud bajó al 69% por el impacto del escalado de la infraestructura de IA, mitigado en parte por mejoras de eficiencia en Azure.",
+        "cifra": 193893000000.0,
+        "unidad": "USD",
+        "ticker": "MSFT",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "Gross margin percentage decreased slightly driven by Intelligent Cloud, offset in part by More Personal Computing.",
+        "chunk_id": "MSFT-2025-7-0007",
+        "concept_xbrl": "GrossProfit",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cómo cambió el beneficio bruto de Microsoft entre FY2024 y FY2025, y qué dice la dirección del porcentaje de margen bruto?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "MSFT",
+              "fiscal_year": 2024,
+              "concept": "GrossProfit"
+            },
+            "resultado": "MSFT FY2024 · GrossProfit = 171,008,000,000 USD (cierre de ejercicio 2024-06-30, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "MSFT",
+              "concept": "GrossProfit",
+              "fiscal_year": 2025
+            },
+            "resultado": "MSFT FY2025 · GrossProfit = 193,893,000,000 USD (cierre de ejercicio 2025-06-30, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "fiscal_year": 2025,
+              "ticker": "MSFT",
+              "item": "7",
+              "query": "gross margin percentage gross margin increased decreased"
+            },
+            "resultado": "[MSFT-2025-7-0010] MSFT FY2025 Item 7 (similitud 0.637)\nIntelligent Cloud\n\nRevenue increased $18.8 billion or 21%.\n\n•\nServer products and cloud services revenue increased $18.6 billion or 23% driven by Azure and other cloud services. Azure and other cloud services revenue grew 34% driven by demand for our portfolio of services. Server products revenue decreased 3% driven by a decrease in transactional purchasing with continued customer shift to cloud offerings.\n\n•\nEnterprise and partner services revenue increased $166 million or 2% driven by growth in Enterprise Support Services, offset in part by a decline in Industry Solutions.\n\nOperating income increased $6.8 billion or 18%.\n\n•\nCost of revenue increased $10.6 billion or 36% driven by growth in Azure.\n\n•\nGross margin increased $8.2 billion or 14% driven by growth in Azure. Gross margin percentage decreased driven by the impact of scaling our AI infrastructure, offset in part by efficiency gains in Azure.\n\n•\nOperating expenses increased $1.5 billion or 7% driven by investments in cloud and AI engineering.\n\nMore Personal Computing\n\nRevenue increased $3.8 billion or 7%.\n\n•\nWindows and Devices revenue increased $288 million or 2%. Windows OEM and Devices revenue increased 3% driven by growth in Windows OEM, offset in part by a decline in Devices.\n\n•\nGaming revenue increased $2.0 billion or 9% driven by growth in Xbox content and services, offset in part by a decline in Xbox hardware. Xbox content and services revenue increased 16% driven by the impact of the Activision Blizzard acquisition and Xbox Game Pass. Xbox hardware revenue decreased 25% driven by lower volume of consoles sold.\n\n•\nSearch and news advertising revenue increased $1.6 billion or 13%. Search and news advertising revenue excluding traffic acquisition costs increased 20% driven by higher search volume and higher revenue per search.\n\nOperating income increased $2.2 billion or 18%.\n\n•\nCost of revenue increased $346 million or 1% driven by growth in Sear",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "item": "7",
+              "ticker": "MSFT",
+              "fiscal_year": 2025,
+              "query": "\"Gross margin\" \"percentage\" consolidated total \"Gross margin increased\""
+            },
+            "resultado": "[MSFT-2025-7-0020] MSFT FY2025 Item 7 (similitud 0.641)\nRECENT ACCOUNTING GUIDANCE\n\nRefer to Note 1 – Accounting Policies of the Notes to Financial Statements (Part II, Item 8 of this Form 10-K).\n\nCRITICAL ACCOUNTING ESTIMATES\n\nOur consolidated financial statements and accompanying notes are prepared in accordance with GAAP. Preparing consolidated financial statements requires management to make estimates and assumptions that affect the reported amounts of assets, liabilities, revenue, and expenses. Critical accounting estimates are those estimates that involve a significant level of estimation uncertainty and could have a material impact on our financial condition or results of operations. We have critical accounting estimates in the areas of revenue recognition, impairment of investment securities, goodwill, research and development costs, legal and other contingencies, and income taxes.\n\n---\n\n[MSFT-2025-7-0017] MSFT FY2025 Item 7 (similitud 0.633)\nCash Flows\n\nCash from operations increased $17.6 billion to $136.2 billion for fiscal year 2025, primarily due to an increase in cash received from customers, offset in part by an increase in cash paid to suppliers and employees and cash used to pay income taxes. Cash used in financing increased $13.9 billion to $51.7 billion for fiscal year 2025, primarily due to a $9.5 billion increase in cash used for repayments of debt, net of proceeds. Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year 2025, primarily due to a $63.2 billion decrease in cash used for acquisitions of companies, net of cash acquired and divestitures, and purchases of intangible and other assets, offset in part by a $22.3 billion increase in cash used in net investment purchases, sales, and maturities, and a $20.1 billion increase in additions to property and equipment.\n\n\n\nDebt Proceeds\n\nWe issue debt to take advantage of favorable pricing and liquidity in the debt markets, reflecting our credit rating. The proceeds of thes",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "\"Gross margin\" \"Cost of revenue\" \"Productivity and Business Processes\" \"Intelligent Cloud\"",
+              "ticker": "MSFT",
+              "item": "7",
+              "fiscal_year": 2025
+            },
+            "resultado": "[MSFT-2025-7-0010] MSFT FY2025 Item 7 (similitud 0.781)\nIntelligent Cloud\n\nRevenue increased $18.8 billion or 21%.\n\n•\nServer products and cloud services revenue increased $18.6 billion or 23% driven by Azure and other cloud services. Azure and other cloud services revenue grew 34% driven by demand for our portfolio of services. Server products revenue decreased 3% driven by a decrease in transactional purchasing with continued customer shift to cloud offerings.\n\n•\nEnterprise and partner services revenue increased $166 million or 2% driven by growth in Enterprise Support Services, offset in part by a decline in Industry Solutions.\n\nOperating income increased $6.8 billion or 18%.\n\n•\nCost of revenue increased $10.6 billion or 36% driven by growth in Azure.\n\n•\nGross margin increased $8.2 billion or 14% driven by growth in Azure. Gross margin percentage decreased driven by the impact of scaling our AI infrastructure, offset in part by efficiency gains in Azure.\n\n•\nOperating expenses increased $1.5 billion or 7% driven by investments in cloud and AI engineering.\n\nMore Personal Computing\n\nRevenue increased $3.8 billion or 7%.\n\n•\nWindows and Devices revenue increased $288 million or 2%. Windows OEM and Devices revenue increased 3% driven by growth in Windows OEM, offset in part by a decline in Devices.\n\n•\nGaming revenue increased $2.0 billion or 9% driven by growth in Xbox content and services, offset in part by a decline in Xbox hardware. Xbox content and services revenue increased 16% driven by the impact of the Activision Blizzard acquisition and Xbox Game Pass. Xbox hardware revenue decreased 25% driven by lower volume of consoles sold.\n\n•\nSearch and news advertising revenue increased $1.6 billion or 13%. Search and news advertising revenue excluding traffic acquisition costs increased 20% driven by higher search volume and higher revenue per search.\n\nOperating income increased $2.2 billion or 18%.\n\n•\nCost of revenue increased $346 million or 1% driven by growth in Sear",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 34985,
+          "tokens_salida": 1957,
+          "coste_usd": 0.0335775
+        },
+        "latencia_s": 31.847338299998228,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:32:04.747724Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings",
+            "search_filings",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-018",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": false,
+      "acierto": false,
+      "respuesta": {
+        "respuesta": "El beneficio bruto de NVIDIA alcanzó 97.858.000.000 USD en el ejercicio fiscal 2025 frente a 44.301.000.000 USD en el ejercicio fiscal 2024, lo que representa un crecimiento de 53.557.000.000 USD (un aumento del 120,89%). La dirección atribuye la mejora del margen bruto (que subió del 72,7% al 75,0%) principalmente a una mayor proporción de ingresos procedentes de Data Center.",
+        "cifra": 97858000000.0,
+        "unidad": "USD",
+        "ticker": "NVDA",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "The year over year increase was primarily driven by a higher mix of Data Center revenue.",
+        "chunk_id": "NVDA-2025-7-0015",
+        "concept_xbrl": "GrossProfit",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuánto creció el beneficio bruto de NVIDIA entre los ejercicios fiscales 2024 y 2025, y a qué atribuye la dirección la mejora del margen?",
+        "llamadas": [
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "fiscal_year": 2024,
+              "ticker": "NVDA",
+              "concept": "GrossProfit"
+            },
+            "resultado": "NVDA FY2024 · GrossProfit = 44,301,000,000 USD (cierre de ejercicio 2024-01-28, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "NVDA",
+              "concept": "GrossProfit",
+              "fiscal_year": 2025
+            },
+            "resultado": "NVDA FY2025 · GrossProfit = 97,858,000,000 USD (cierre de ejercicio 2025-01-26, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "item": "7",
+              "ticker": "NVDA",
+              "query": "gross margin increased driver Data Center architecture mix",
+              "fiscal_year": 2025
+            },
+            "resultado": "[NVDA-2025-7-0013] NVDA FY2025 Item 7 (similitud 0.742) · contiene tabla\nYear Ended\nJan 26, 2025\t\tJan 28, 2024\t\t$ Change\t\t% Change\n($ in millions)\nCompute & Networking\t$\t82,875\t\t\t$\t32,016\t\t\t$\t50,859\t\t\t159\t%\nGraphics\t5,085\t\t\t5,846\t\t\t(761)\t\t\t(13)\t%\nAll Other\t(6,507)\t\t\t(4,890)\t\t\t(1,617)\t\t\t33\t%\nTotal\t$\t81,453\t\t\t$\t32,972\t\t\t$\t48,481\t\t\t147\t%\n\nCompute & Networking revenue – The year over year increase was due to strong demand for our accelerated computing and AI solutions. Revenue from Data Center computing grew 162% driven primarily by demand for our Hopper computing platform used for large language models, recommendation engines, and generative AI applications. Revenue from Data Center networking grew 51% driven by Ethernet for AI revenue, which includes Spectrum-X end-to-end ethernet platform.\n\nGraphics revenue – The year over year increase was driven by sales of our GeForce RTX 40 Series GPUs.\n\nReportable segment operating income – The year over year increase in Compute & Networking segment operating income was driven by growth in revenue. The year over year decrease in Graphics segment operating income was driven by an increase of 44% in segment operating expenses, partially offset by growth in revenue.\n\nAll Other operating loss – The year over year increase was due to an increase in stock-based compensation expense reflecting employee growth and compensation increases.\n\nConcentration of Revenue\n\nWe refer to customers who purchase products directly from NVIDIA as direct customers, such as AIBs, distributors, ODMs, OEMs, and system integrators. We have certain customers that may purchase products directly from NVIDIA and may use either internal resources or third-party system integrators to complete their build. We also have indirect customers, who purchase products through our direct customers; indirect customers include CSPs, consumer internet companies, enterprises, and public sector entities.\n\nDirect Customers – Sales to direct customers which represented 10% or mor",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 19526,
+          "tokens_salida": 6850,
+          "coste_usd": 0.040332
+        },
+        "latencia_s": 45.008016699999644,
+        "intervenciones_guardarrail": 1,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:32:49.761137Z"
+      },
+      "cita": {
+        "veredicto": "fallo",
+        "motivo": "no_respalda_ancla: la cita no está a menos de 600 caracteres del ancla",
+        "detalle": {
+          "no_respalda_ancla": "la cita no está a menos de 600 caracteres del ancla"
+        }
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-019",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "Los ingresos totales de Apple aumentaron en 25.126.000.000 USD (+6,42%) entre FY2024 (391.035.000.000 USD) y FY2025 (416.161.000.000 USD). Por su parte, las ventas en la Gran China disminuyeron un 4% (de 66.952 a 64.377 millones de dólares) debido principalmente a menores ventas de iPhone, compensadas parcialmente por mayores ventas de Mac.",
+        "cifra": 416161000000.0,
+        "unidad": "USD",
+        "ticker": "AAPL",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "Greater China net sales decreased during 2025 compared to 2024 primarily due to lower net sales of iPhone, partially offset by higher net sales of Mac.",
+        "chunk_id": "AAPL-2025-7-0002",
+        "concept_xbrl": "RevenueFromContractWithCustomerExcludingAssessedTax",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuánto crecieron los ingresos de Apple entre FY2024 y FY2025, y qué pasó con las ventas en la Gran China?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "AAPL",
+              "fiscal_year": 2024,
+              "concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+            },
+            "resultado": "AAPL FY2024 · RevenueFromContractWithCustomerExcludingAssessedTax = 391,035,000,000 USD (cierre de ejercicio 2024-09-28, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "AAPL",
+              "fiscal_year": 2025,
+              "concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+            },
+            "resultado": "AAPL FY2025 · RevenueFromContractWithCustomerExcludingAssessedTax = 416,161,000,000 USD (cierre de ejercicio 2025-09-27, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "Greater China net sales revenue change",
+              "fiscal_year": 2025,
+              "k": 5,
+              "ticker": "AAPL",
+              "item": "7"
+            },
+            "resultado": "[AAPL-2025-7-0002] AAPL FY2025 Item 7 (similitud 0.675) · contiene tabla\nSegment Operating Performance\n\nThe following table shows net sales by reportable segment for 2025, 2024 and 2023 (dollars in millions):\n\n2025\t\tChange\t\t2024\t\tChange\t\t2023\nAmericas\t$\t178,353\t\t\t7\t%\t\t$\t167,045\t\t\t3\t%\t\t$\t162,560\nEurope\t111,032\t\t\t10\t%\t\t101,328\t\t\t7\t%\t\t94,294\nGreater China\t64,377\t\t\t(4)\t%\t\t66,952\t\t\t(8)\t%\t\t72,559\nJapan\t28,703\t\t\t15\t%\t\t25,052\t\t\t3\t%\t\t24,257\nRest of Asia Pacific\t33,696\t\t\t10\t%\t\t30,658\t\t\t4\t%\t\t29,615\nTotal net sales\t$\t416,161\t\t\t6\t%\t\t$\t391,035\t\t\t2\t%\t\t$\t383,285\n\nAmericas\n\nAmericas net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone and Services. The weakness in foreign currencies relative to the U.S. dollar had an unfavorable year-over-year impact on Americas net sales during 2025.\n\nEurope\n\nEurope net sales increased during 2025 compared to 2024 primarily due to higher net sales of Services, iPhone and Mac.\n\nGreater China\n\nGreater China net sales decreased during 2025 compared to 2024 primarily due to lower net sales of iPhone, partially offset by higher net sales of Mac.\n\nJapan\n\nJapan net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone, Services and iPad.\n\nRest of Asia Pacific\n\nRest of Asia Pacific net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone, Services and Mac.\n\nApple Inc. | 2025 Form 10-K | 22\n\n---\n\n[AAPL-2025-7-0003] AAPL FY2025 Item 7 (similitud 0.617) · contiene tabla\nProducts and Services Performance\n\nThe following table shows net sales by category for 2025, 2024 and 2023 (dollars in millions):\n\n2025\t\tChange\t\t2024\t\tChange\t\t2023\niPhone\t$\t209,586\t\t\t4\t%\t\t$\t201,183\t\t\t—\t%\t\t$\t200,583\nMac\t33,708\t\t\t12\t%\t\t29,984\t\t\t2\t%\t\t29,357\niPad\t28,023\t\t\t5\t%\t\t26,694\t\t\t(6)\t%\t\t28,300\nWearables, Home and Accessories\t35,686\t\t\t(4)\t%\t\t37,005\t\t\t(7)\t%\t\t39,845\nServices (1)\t109,158\t\t\t14\t%\t\t96,169\t\t\t13\t%\t\t85,200\nTotal net sales\t$\t416,161\t\t\t6\t%\t\t$\t391,035\t\t\t2\t%\t\t$\t383,285\n\n(1)Servic",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 15285,
+          "tokens_salida": 1484,
+          "coste_usd": 0.01702875
+        },
+        "latencia_s": 18.701511700000992,
+        "intervenciones_guardarrail": 0,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:33:08.466456Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    },
+    {
+      "pregunta_id": "g-r-020",
+      "familia": "comparativa",
+      "es_hueco": false,
+      "respuesta_correcta": true,
+      "acierto": true,
+      "respuesta": {
+        "respuesta": "El beneficio operativo total de Alphabet se situó en 129.039.000.000 USD en el ejercicio 2025, frente a los 112.390.000.000 USD de 2024, lo que supone un crecimiento de 16.649.000.000 USD (un 14,81%). Por su parte, el aumento del beneficio operativo del segmento Google Cloud estuvo impulsado principalmente por el crecimiento de los ingresos, compensado parcialmente por el incremento de los costes de uso de infraestructura técnica y los gastos de compensación a empleados.",
+        "cifra": 129039000000.0,
+        "unidad": "USD",
+        "ticker": "GOOGL",
+        "ejercicio": 2025,
+        "fuente": "ambas",
+        "cita": "The increase in operating income was primarily driven by an increase in revenues, partially offset by increases in usage costs for technical infrastructure and employee compensation expenses.",
+        "chunk_id": "GOOGL-2025-7-0016",
+        "concept_xbrl": "OperatingIncomeLoss",
+        "motivo_sin_dato": null
+      },
+      "traza": {
+        "pregunta": "¿Cuánto creció el beneficio operativo total de Alphabet entre 2024 y 2025, y qué explica el aumento del beneficio operativo de Google Cloud?",
+        "llamadas": [
+          {
+            "nombre": "list_available",
+            "argumentos": {},
+            "resultado": "Corpus de informes 10-K de la SEC. Una línea por compañía:\n\nAAPL (Apple Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nAMZN (AMAZON COM INC) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nGOOGL (Alphabet Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMETA (Meta Platforms, Inc.) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nMSFT (MICROSOFT CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\nNVDA (NVIDIA CORP) · ejercicios 2024, 2025 · items 1A, 7, 7A, 8\n\nItems: 1A factores de riesgo · 7 discusión de la dirección · 7A riesgo de mercado · 8 estados financieros.\nEl ejercicio fiscal NO es el año de presentación: los emisores cierran en meses distintos. Fíate del ejercicio que se pide, nunca de una fecha.\nCualquier compañía o ejercicio que no esté en esta lista NO está en el corpus: dilo en vez de buscarlo.",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "concept": "OperatingIncomeLoss",
+              "fiscal_year": 2024,
+              "ticker": "GOOGL"
+            },
+            "resultado": "GOOGL FY2024 · OperatingIncomeLoss = 112,390,000,000 USD (cierre de ejercicio 2024-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "ticker": "GOOGL",
+              "concept": "OperatingIncomeLoss",
+              "fiscal_year": 2025
+            },
+            "resultado": "GOOGL FY2025 · OperatingIncomeLoss = 129,039,000,000 USD (cierre de ejercicio 2025-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "search_filings",
+            "argumentos": {
+              "query": "Google Cloud operating income increased revenues",
+              "item": "7",
+              "ticker": "GOOGL",
+              "fiscal_year": 2025
+            },
+            "resultado": "[GOOGL-2025-7-0016] GOOGL FY2025 Item 7 (similitud 0.868) · contiene tabla\nGoogle Services\n\nGoogle Services operating income increased $18.1 billion from 2024 to 2025. The increase in operating income was primarily driven by an increase in revenues, partially offset by an increase in expenses related to legal and other matters, TAC, and content acquisition costs.\n\nGoogle Cloud\n\nGoogle Cloud operating income increased $7.8 billion from 2024 to 2025. The increase in operating income was primarily driven by an increase in revenues, partially offset by increases in usage costs for technical infrastructure and employee compensation expenses.\n\nOther Bets\n\nOther Bets operating loss increased $3.1 billion from 2024 to 2025. The increase in operating loss was primarily driven by an increase in employee compensation expenses largely due to an increase in a valuation-based compensation charge related to Waymo.\n\nOther Income (Expense), Net\n\nThe following table presents OI&E, (in millions):\n\nYear Ended December 31,\n2024\t\t2025\nInterest income\t$\t4,482\t\t\t$\t4,337\nInterest expense\t(268)\t\t\t(736)\nForeign currency exchange gain (loss), net\t(409)\t\t\t(382)\nGain (loss) on debt securities, net\t(1,043)\t\t\t540\nGain (loss) on equity securities, net\t3,714\t\t\t24,080\nIncome (loss) and impairment from equity method investments, net\t(188)\t\t\t281\nOther\t1,137\t\t\t1,667\nOther income (expense), net\t$\t7,425\t\t\t$\t29,787\n\nOI&E, net increased $22.4 billion from 2024 to 2025, primarily due to increases in net unrealized gains on equity securities resulting from fair value adjustments on non-marketable equity securities.\n\nFor additional information, see Note 3 and Note 7 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K.\n\n36.\n\nTable of Contents\tAlphabet Inc.\n\n---\n\n[GOOGL-2025-7-0009] GOOGL FY2025 Item 7 (similitud 0.786) · contiene tabla\nExecutive Overview\n\nThe following table summarizes consolidated financial results (in millions, except for per share informati",
+            "latencia_s": null,
+            "error": null
+          },
+          {
+            "nombre": "get_xbrl_fact",
+            "argumentos": {
+              "concept": "OperatingIncomeLoss",
+              "fiscal_year": 2025,
+              "ticker": "GOOGL"
+            },
+            "resultado": "GOOGL FY2025 · OperatingIncomeLoss = 129,039,000,000 USD (cierre de ejercicio 2025-12-31, según el 10-K)",
+            "latencia_s": null,
+            "error": null
+          }
+        ],
+        "uso": {
+          "tokens_entrada": 31414,
+          "tokens_salida": 2172,
+          "coste_usd": 0.0317055
+        },
+        "latencia_s": 25.261080899999797,
+        "intervenciones_guardarrail": 1,
+        "reintentos_guardarrail": 0,
+        "limite_alcanzado": false,
+        "version_prompt": "v2",
+        "proveedor": "openrouter",
+        "modelo": "google/gemini-3.8-flash",
+        "config_retrieval": {
+          "recuperador": "denso",
+          "filtro_metadatos": false,
+          "reescritura_consulta": false,
+          "reordenacion": false,
+          "fusion_reordenacion": false,
+          "rrf_k": 60,
+          "k_por_defecto": 5
+        },
+        "error": null,
+        "fecha": "2026-09-24T09:33:33.731135Z"
+      },
+      "cita": {
+        "veredicto": "acierto",
+        "motivo": "cita literal, bien atribuida y junto al ancla",
+        "detalle": {}
+      },
+      "cifra": {
+        "veredicto": "acierto",
+        "motivo": "coincide con XBRL (0.500% relativo o 1 en valor absoluto, lo que sea mayor)",
+        "detalle": {}
+      },
+      "trayectoria": {
+        "veredicto": "acierto",
+        "motivo": "pasó por get_xbrl_fact, search_filings",
+        "detalle": {
+          "usadas": [
+            "list_available",
+            "get_xbrl_fact",
+            "get_xbrl_fact",
+            "search_filings",
+            "get_xbrl_fact"
+          ]
+        }
+      },
+      "estado_trayectoria": "camino_correcto",
+      "alucinacion_sobre_hueco": false,
+      "error": null
+    }
+  ],
+  "metricas": {
+    "n_preguntas": 20,
+    "aciertos_por_familia": {
+      "numerica": 1.0,
+      "total": 0.85,
+      "hueco": 1.0,
+      "comparativa": 0.8333333333333334,
+      "extractiva": 0.6666666666666666
+    },
+    "n_por_familia": {
+      "numerica": 8,
+      "total": 20,
+      "hueco": 3,
+      "comparativa": 6,
+      "extractiva": 6
+    },
+    "recall_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.25,
+      "10": 0.25
+    },
+    "mrr": 0.05833333333333333,
+    "coste_medio_usd": 0.018049125,
+    "latencia_media_s": 22.25621191,
+    "llamadas_por_pregunta": 2.75,
+    "tasa_camino_correcto": 1.0,
+    "tasa_acierto_por_camino_equivocado": 0.0,
+    "tasa_intervencion_guardarrail": 0.2,
+    "tasa_recuperacion_guardarrail": 0.75,
+    "alucinaciones_sobre_hueco": 0,
+    "tasa_abstencion_indebida": 0.0
+  }
+}

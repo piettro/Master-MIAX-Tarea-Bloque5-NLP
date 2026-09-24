@@ -462,8 +462,12 @@ class InformeEvaluacion(BaseModel):
         """Una línea legible, para el REPL y para el día 24."""
         m = self.metricas
         coste = "?" if m.coste_medio_usd is None else f"{m.coste_medio_usd:.5f} $"
+        # Las ciegas llegan sin herramienta esperada: ahí el camino no se puede
+        # juzgar, y un «0 %» se leería como que el agente enruta mal.
+        juzgables = any(r.estado_trayectoria != "no_aplica" for r in self.resultados)
+        camino = f"{m.tasa_camino_correcto:.0%}" if juzgables else "no aplica"
         return (
             f"InformeEvaluacion({self.etiqueta}: {m.n_preguntas} preguntas, "
-            f"camino correcto {m.tasa_camino_correcto:.0%}, "
+            f"camino correcto {camino}, "
             f"coste medio {coste}, latencia media {m.latencia_media_s:.1f} s)"
         )

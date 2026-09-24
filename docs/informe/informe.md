@@ -73,6 +73,17 @@ está. Y su simétrico, la **abstención indebida**: decir «no hay dato» cuand
 lo había. Un sistema que no contesta nunca no alucina y no vale para nada; hacen
 falta las dos columnas para que ninguna de las dos trampas pase desapercibida.
 
+### Una limitación que conocemos
+
+La tolerancia absoluta de 1 USD está pensada para importes de miles de millones,
+donde un dólar es ruido. Para una magnitud por acción es demasiado laxa: con un
+beneficio por acción de 11,86 USD, decir 12 entra en tolerancia, y es un error
+del 1,2 %. Lo descubrimos ensayando sobre un clon limpio —`get_xbrl_fact`
+redondeaba el BPA a entero y el modelo copiaba el 12—. Arreglamos la
+herramienta, pero **no** tocamos la tolerancia: cambiar la vara de medir después
+de congelar el baseline haría que las dos columnas de la tabla no se midieran
+igual. Lo correcto a futuro es una tolerancia por unidad.
+
 ### Veinte preguntas no son una muestra grande
 
 Con veinte preguntas, subir de 12 a 14 aciertos es mover dos preguntas. Por eso
@@ -158,9 +169,65 @@ ejecutó y se **congeló** antes de tocar nada (`resultados/baseline/SELLO.json`
 huellas SHA-256 de cada fichero); regenerarlo exige borrar el sello a mano y
 dejar constancia en `docs/decisiones.md`.
 
-<p class="aviso">PENDIENTE: falta docs\informe\tabla_principal.md. Se genera ejecutando el repositorio.</p>
+| sistema | extractiva | numérica | comparativa | hueco | total | recall@5 | coste medio | latencia media | tool calls/pregunta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline | **83%** | 75% | 0% | 33% | 55% | 25% | **1.234 ¢** | **17.7 s** | 3.4 |
+| final | **83%** | **100%** | **83%** | **100%** | **90%** | **92%** | 1.652 ¢ | 22.3 s | **2.6** |
 
-<p class="aviso">PENDIENTE: falta docs\informe\significancia.md. Se genera ejecutando el repositorio.</p>
+| sistema | aciertos | IC 95 % (Wilson) |
+| --- | --- | --- |
+| baseline | 11/20 | [34%, 74%] |
+| final | 18/20 | [70%, 97%] |
+
+McNemar exacto sobre las 20 preguntas comunes: baseline acierta y final falla en 0; al revés, 7. p = 0.016, la diferencia es significativa al 5 %.
+
+**La mejora aguanta el contraste.** El sistema final no pierde ninguna pregunta
+que acertara el baseline, y la diferencia es significativa al 5 % con McNemar
+exacto. Los intervalos de Wilson de los dos sistemas apenas se tocan.
+
+### Qué cambió del baseline al final
+
+- **Comparativas.** El baseline no acertaba ninguna. El prompt le dice ahora
+  que haga dos consultas exactas, una por ejercicio, y que la respuesta lleve
+  cifra de XBRL y cita del texto a la vez.
+- **Huecos.** El baseline se inventó una cifra donde no había dato. El final
+  no alucina ninguna: el prompt autoriza a decir «no está», y el guardarraíl
+  no salta ante una respuesta de hueco.
+- **Guardarraíl XBRL.** Salta cuando la cifra afirmada no cuadra con el hecho
+  XBRL, le devuelve el desajuste al modelo y le deja corregir; nunca corrige él.
+  La tabla del guardarraíl, en el detalle del final, dice cuántas veces saltó y
+  cuántas de esas acabaron bien.
+- **Citas.** La versión 2 del prompt dice cómo se cita: frase literal y su
+  `chunk_id`. La mitad de los fallos de las extractivas eran citas
+  parafraseadas o sin identificador.
+- **Robustez.** Reintento ante errores transitorios del proveedor —una pregunta
+  moría en cada corrida por un «Provider returned error»—, y si el modelo
+  termina sin salida estructurada, se le pide en el mismo hilo.
+
+### ¿Qué aporta el retrieval al agente?
+
+La tabla de ablación de la sección 4 mide el buscador solo. Esta mide el agente
+entero con y sin las mejoras de búsqueda: la fila del medio es el sistema final
+con el retrieval del baseline —denso, sin filtro previo, sin reescritura y sin
+reordenar—.
+
+| sistema | extractiva | numérica | comparativa | hueco | total | recall@5 | coste medio | latencia media | tool calls/pregunta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline | **83%** | 75% | 0% | 33% | 55% | 25% | **1.234 ¢** | **17.7 s** | 3.4 |
+| final-sin-mejoras-retrieval | 67% | **100%** | **83%** | **100%** | 85% | 25% | 1.805 ¢ | 22.3 s | 2.8 |
+| final | **83%** | **100%** | **83%** | **100%** | **90%** | **92%** | 1.652 ¢ | 22.3 s | **2.6** |
+
+**Casi toda la mejora es del agente, no del buscador.** El recall@5 pasa de
+un cuarto a más del noventa por ciento, y el acierto del agente sube una sola
+pregunta. Tiene explicación: el agente pasa sus propios filtros de emisor y
+ejercicio a `search_filings` y saca las cifras de XBRL, así que buena parte de
+lo que arregla el retrieval ya lo arreglaba él. Lo que el buscador sí aporta es
+eficiencia: con mejores fragmentos arriba, el agente hace menos llamadas y la
+pregunta sale algo más barata, aunque la reescritura añade la suya.
+
+Es el resultado más útil de la práctica y el menos intuitivo: una mejora
+enorme en la métrica de un componente puede no llegar al sistema. Por eso se
+mide las dos cosas.
 
 ### El baseline, en detalle
 
