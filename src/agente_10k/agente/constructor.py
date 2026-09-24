@@ -1,4 +1,4 @@
-"""Ensambla el agente con LangChain. FASE 4.
+"""Ensambla el agente con LangChain.
 
     create_agent(
         model=..., tools=..., system_prompt=...,
@@ -98,7 +98,7 @@ class AgenteInvestigador:
     def descripcion(self) -> dict[str, object]:
         """Qué sistema es, para `InformeEvaluacion.configuracion`."""
         return {
-            "sistema": "agente final (fase 4)",
+            "sistema": "agente final",
             "modelo": f"{self._proveedor.proveedor}:{self._proveedor.modelo}",
             "en_reserva": self._proveedor.en_reserva,
             "limite_llamadas": self._cfg.max_llamadas_herramienta,

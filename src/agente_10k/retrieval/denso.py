@@ -1,6 +1,6 @@
 """Búsqueda densa sobre el índice FAISS. P1: una implementación de `Recuperador`.
 
-Es el recuperador que se entrega y el punto de partida de la fase 3. Aquí está
+Es el recuperador que se entrega y el punto de partida del retrieval. Está
 completo y funcionando a propósito: es el BASELINE contra el que se mide todo lo
 demás, y sin él ni `search_filings` ni el baseline del profesor arrancan.
 
@@ -15,8 +15,8 @@ grupo de tres.
 
 **Los filtros se aplican DESPUÉS de la búsqueda**, igual que en la
 implementación del profesor. Es deliberado: así esta clase es el baseline
-honesto, y el filtro por metadatos aplicado ANTES es una mejora medible de la
-fase 3 y no algo que ya estuviera hecho.
+honesto, y el filtro por metadatos aplicado ANTES es una mejora medible y no
+algo que ya estuviera hecho.
 """
 
 from __future__ import annotations

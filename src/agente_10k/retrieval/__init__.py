@@ -1,8 +1,8 @@
 """Retrieval. P1 (Strategy) para los recuperadores, P2 (Decorator) para las mejoras.
 
-`denso.py` está implementado: es el recuperador que se entrega y el baseline
-contra el que se mide. El resto —léxico, híbrido, filtro previo y reescritura—
-son los stubs de la fase 3, con sus firmas fijadas y sus tests en rojo.
+`denso.py` es el recuperador que se entrega y el punto de partida contra el
+que se mide. Encima van el léxico, el híbrido y los decoradores: filtro previo,
+reescritura de la consulta y reordenación con cross-encoder.
 """
 
 from __future__ import annotations

@@ -1,8 +1,8 @@
 """Configuración del sistema: 12-factor, todo por entorno.
 
 Cambiar de recuperador, de modelo o de proveedor es cambiar una variable de
-entorno, nunca editar código. Es lo que hace que la tabla de ablación de la
-fase 3 salga de un bucle sobre configuraciones y que `responder()` funcione
+entorno, nunca editar código. Es lo que hace que la tabla de ablación
+salga de un bucle sobre configuraciones y que `responder()` funcione
 sobre un clon limpio sin tocar nada (CONTRATO C5).
 
 Prefijo `AGENTE10K_` en todo salvo las claves de API, que llevan el nombre
@@ -85,7 +85,7 @@ class Settings(BaseSettings):
 
     # --- retrieval (F3) ----------------------------------------------------
     # Los valores por defecto son los del SISTEMA FINAL, la fila que ganó la
-    # ablación (ADR-022): `responder()` sobre un clon limpio tiene que ejecutar
+    # ablación (ADR-021): `responder()` sobre un clon limpio tiene que ejecutar
     # el sistema que se defiende sin exportar nada. El baseline y las filas de
     # la ablación parten de `retrieval.fabrica.SIN_MEJORAS`, no de aquí.
     recuperador: TipoRecuperador = "hibrido"

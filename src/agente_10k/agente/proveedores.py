@@ -1,4 +1,4 @@
-"""Fábrica de proveedores de LLM. FASE 4. P5: Factory + Adapter.
+"""Fábrica de proveedores de LLM. P5: Factory + Adapter.
 
 El proveedor se elige por variable de entorno y LangChain abstrae el resto:
 `init_chat_model("openrouter:google/gemini-3.8-flash")` y

@@ -1,4 +1,4 @@
-"""El informe en PDF, montado desde `resultados/`. FASE 5.
+"""El informe en PDF, montado desde `resultados/`.
 
 La plantilla es prosa con marcas `{{incluir: ruta}}`; cada marca se sustituye
 por el fichero que generó el código. Es la misma regla de siempre: ninguna

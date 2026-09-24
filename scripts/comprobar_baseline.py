@@ -1,4 +1,4 @@
-"""Gancho que protege `resultados/baseline/`. HITO 1, irreversible.
+"""Gancho que protege `resultados/baseline/`. Congelarlo es irreversible.
 
 El baseline es media tabla del informe. Si se sobrescribe después de haberlo
 congelado no hay forma de recuperarlo: habría que volver al commit de aquel día
@@ -77,7 +77,7 @@ def main() -> int:
     problemas = verificar()
     if not problemas:
         return 0
-    print("resultados/baseline/ está CONGELADO (HITO 1) y ha cambiado:")
+    print("resultados/baseline/ está CONGELADO y ha cambiado:")
     for p in problemas:
         print(f"  - {p}")
     print(

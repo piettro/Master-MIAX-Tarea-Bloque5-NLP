@@ -77,7 +77,7 @@ def cobertura(_: Sequence[str]) -> None:
 
 
 def baseline(args: Sequence[str]) -> None:
-    """Ejecuta el baseline del profesor y lo congela. HITO 1, irreversible."""
+    """Ejecuta el baseline del profesor y lo congela. Irreversible."""
     _correr(PY, "-m", "agente_10k.cli", "baseline", *args)
 
 

@@ -1,4 +1,4 @@
-"""El runner de la tabla de ablación del retrieval. FASE 3 — Alonso.
+"""El runner de la tabla de ablación del retrieval.
 
 Aquí es donde «mejora del retrieval» se convierte en «mejora MEDIDA del
 retrieval», que es lo que pide el enunciado. La regla que gobierna el módulo:
@@ -126,8 +126,8 @@ def medir_configuracion(
     con el `k` máximo pedido y calcula el recall contra el ancla, la latencia
     media por consulta y el coste medio (el de la reescritura, si la hay).
 
-    Si la configuración pide algo que todavía no está disponible —la reescritura
-    necesita un proveedor de LLM, que es la fase 4— la fila se marca como
+    Si la configuración pide algo que no se puede montar —la reescritura sin
+    clave de API para el modelo— la fila se marca como
     `pendiente` con el motivo, en vez de abortar la tabla entera. Una fila que
     falta con su porqué es más honesta que una tabla que no se genera.
 

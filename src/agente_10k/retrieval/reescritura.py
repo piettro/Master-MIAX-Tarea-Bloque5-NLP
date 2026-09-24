@@ -1,4 +1,4 @@
-"""Decorador que reescribe la consulta con el LLM. FASE 3 — Alonso.
+"""Decorador que reescribe la consulta con el LLM.
 
 P2: Decorator, igual que el filtro. Reescribe la consulta antes de pasarla al
 recuperador envuelto: la pregunta del usuario llega en español y en lenguaje de

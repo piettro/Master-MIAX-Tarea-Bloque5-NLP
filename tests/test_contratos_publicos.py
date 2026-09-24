@@ -136,7 +136,7 @@ class TestContratoC6:
 
 
 class TestBaselineCongelado:
-    """HITO 1, irreversible. Media tabla del informe."""
+    """Congelarlo es irreversible, y es media tabla del informe."""
 
     def test_el_codigo_del_profesor_esta_preservado(self):
         assert (RAIZ / "src/agente_10k/baseline/miax_s1.py").is_file()

@@ -1,4 +1,4 @@
-"""Middleware del agente. FASE 4. P4: Chain of Responsibility.
+"""Middleware del agente. P4: Chain of Responsibility.
 
 Dos eslabones, y los dos comparten la misma filosofía: **devolverle el problema
 al modelo, no arreglárselo por detrás.**

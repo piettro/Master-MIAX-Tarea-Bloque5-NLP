@@ -56,10 +56,10 @@ def construir_recuperador(
         configuración.
 
     Raises:
-        NotImplementedError: Si se pide un recuperador o un decorador de la
-            fase 3 que todavía no está implementado. Es deliberado: mejor un
-            error que diga qué falta que caer en silencio al denso y publicar
-            una tabla de ablación en la que todas las filas son iguales.
+        ValueError: Si se pide la reescritura sin proveedor o un recuperador
+            que no existe. Mejor un error que diga qué falta que caer en
+            silencio al denso y publicar una tabla en la que todas las filas
+            son iguales.
     """
     cfg = config or settings()
 
@@ -141,7 +141,7 @@ SIN_MEJORAS: dict[str, object] = {
 """El retrieval de partida: el denso del profesor, sin nada encima.
 
 Cada fila de la ablación se mide sobre ESTO más sus overrides, no sobre los
-valores por defecto de `Settings`, que son los del sistema final (ADR-022). Si
+valores por defecto de `Settings`, que son los del sistema final (ADR-021). Si
 se midiera sobre los de por defecto, la fila «denso (base)» llevaría puestas
 todas las mejoras sin decirlo.
 """
@@ -215,6 +215,6 @@ CONFIGURACIONES_ABLACION: tuple[tuple[str, dict[str, object]], ...] = (
 )
 """Las filas de la tabla de ablación, como datos.
 
-Cada una es un conjunto de overrides sobre `Settings`. El runner de la fase 3
+Cada una es un conjunto de overrides sobre `Settings`. El runner de la ablación
 recorre esta tupla; añadir una fila es añadir una tupla, nunca escribir código.
 """

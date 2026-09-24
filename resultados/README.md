@@ -7,6 +7,8 @@ el repositorio y se puede regenerar ejecutándolo.
 resultados/
 ├── baseline/   la implementación del profesor, CONGELADA. No se toca.
 ├── final/      nuestro sistema. Se regenera con `make final`.
+├── final-sin-mejoras-retrieval/
+│               el final con el retrieval del baseline: cuánto aporta el buscador.
 ├── retrieval/  la tabla de ablación. Se regenera con `make ablacion`.
 └── ciegas/     las 10 preguntas del día 24. Vacío hasta ese día.
 ```

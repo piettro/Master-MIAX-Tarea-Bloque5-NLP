@@ -375,9 +375,9 @@ def validar_fichero(ruta: str | Path, exigir_completo: bool = True) -> list[str]
 
 
 def fusionar_parciales(dir_parciales: Path, destino: Path) -> int:
-    """Fusiona `golden/parciales/*.jsonl` en un único golden set.
+    """Fusiona los `*.jsonl` de un directorio en un único golden set.
 
-    Cada autor escribe en su propio fichero y esta función los junta. Es lo que
+    Cada tanda de preguntas va en su fichero y esta función los junta. Es lo que
     evita los conflictos de merge en un JSONL, que es un fichero donde git no
     sabe resolver nada.
 
@@ -395,7 +395,7 @@ def fusionar_parciales(dir_parciales: Path, destino: Path) -> int:
             if pid in procedencia:
                 raise ValueError(
                     f"id '{pid}' repetido en {fichero.name} y "
-                    f"{procedencia[pid]}. Cada autor tiene su rango de ids."
+                    f"{procedencia[pid]}. Cada tanda tiene que usar sus propios ids."
                 )
             procedencia[pid] = fichero.name
             todas.append(p)
@@ -422,8 +422,8 @@ def main() -> int:
     ruta = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / "golden/golden_set.jsonl"
     if not ruta.is_file():
         print(
-            f"{ruta} no existe todavía. Escribe las preguntas en "
-            f"golden/parciales/ y fusiónalas con fusionar_parciales()."
+            f"{ruta} no existe. Escribe las preguntas en un JSONL con el "
+            f"esquema de golden_set_ejemplo.jsonl."
         )
         return 1
     problemas = validar_fichero(ruta)

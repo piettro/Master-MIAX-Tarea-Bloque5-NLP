@@ -1,4 +1,4 @@
-"""El runner de la tabla de ablación. FASE 3 — Alonso.
+"""El runner de la tabla de ablación.
 
 Se prueba la LÓGICA del runner —el recall contra el ancla, la decisión de pasar
 o no los filtros (ADR-015), el conteo del coste de la reescritura, las filas
@@ -38,7 +38,7 @@ class _RecuperadorEspia:
 
     Es lo que permite comprobar la decisión de ADR-015: la fila base tiene que
     llamar sin filtros y la fila del filtro con ellos. Sin un espía, esa decisión
-    —que es media fase 3— no se podría verificar sin el corpus entero.
+    —que es media tabla de ablación— no se podría verificar sin el corpus entero.
     """
 
     def __init__(

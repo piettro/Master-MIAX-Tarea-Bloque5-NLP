@@ -12,17 +12,15 @@ por qué; no se borra.
 
 ## ADR-001 · El material de clase viaja dentro del repositorio
 
-**Contexto.** El `.gitignore` que había ignoraba `class_transcription/`,
-`prompts/`, `pipeline/` y `materials/`. `PIPELINE.md` (HITO 0) exige lo
-contrario: que las transcripciones y `docs/enunciado.md` estén *dentro* del
-repo. Son dos instrucciones incompatibles.
+**Contexto.** El `.gitignore` inicial ignoraba el material de clase, pero el
+repositorio tenía que poder leerse sin el aula virtual: como mínimo, el
+enunciado tenía que estar dentro.
 
 **Opciones.** (a) Mantener el ignore y depender de que los tres tengamos los
 ficheros en local. (b) Versionarlo todo, incluidos los `.docx` y los ZIP. (c)
 Versionar el material textual y dejar fuera los binarios originales.
 
-**Decisión.** (c). `class_transcription/`, `docs/enunciado.md`, `pipeline/` y
-`prompts/` se versionan; `materials/` —los `.docx` y los ZIP tal cual llegaron
+**Decisión.** (c). `class_transcription/` y `docs/enunciado.md` se versionan; `materials/` —los `.docx` y los ZIP tal cual llegaron
 del aula virtual— no. `docs/enunciado.md` se genera del `.docx` y es la copia
 que manda.
 
@@ -207,7 +205,7 @@ ablación —incluido que **filtra después de buscar**, igual que la
 implementación del profesor, para que «filtrar antes» sea una mejora medible y
 no algo que ya estuviera hecho—. Por eso `AGENTE10K_FILTRO_METADATOS` viene a
 `false` por defecto: activarlo es la segunda fila de la tabla, no el punto de
-partida. Alonso llega a la fase 3 con la interfaz estable y una fila base ya
+partida. La fase 3 empieza con la interfaz estable y una fila base ya
 ejecutable.
 
 **Corolario que costó un rato encontrar.** Con el filtro activado por defecto,
@@ -461,24 +459,7 @@ transcripciones pasa a exigir lo contrario: que no estén versionadas.
 
 ---
 
-## ADR-021 · Los ficheros del golden set no llevan nombres de persona
-
-**Contexto.** Las preguntas se escribían en `parciales/<nombre>.jsonl`, uno por
-autor, para no pisarse en un JSONL donde git no sabe fusionar. Acabó habiendo
-un solo fichero, con el nombre de uno de los tres, en un trabajo de equipo.
-
-**Decisión.** El parcial se llama `parciales/preguntas.jsonl` y el campo
-`autor` de las veinte preguntas dice `equipo`. El mecanismo de fusión no
-cambia: `fusionar_parciales` recorre el directorio, y si hiciera falta volver a
-repartirse el trabajo basta con añadir otro fichero.
-
-**Consecuencia.** El campo `autor` deja de servir para auditar quién escribió
-cada pregunta. A cambio, el entregable no lleva el nombre de nadie en la ruta
-de un fichero.
-
----
-
-## ADR-022 · La configuración por defecto es la del sistema final
+## ADR-021 · La configuración por defecto es la del sistema final
 
 **Contexto.** `Settings` tenía por defecto el retrieval de partida: denso, sin
 filtro previo, sin reescritura. Era lo honesto para medir la ablación, pero el
@@ -501,7 +482,7 @@ lo usan los dos llamantes.
 
 ---
 
-## ADR-023 · Los errores del proveedor suben; los del modelo, no
+## ADR-022 · Los errores del proveedor suben; los del modelo, no
 
 **Contexto.** El contrato dice que el agente no lanza: una excepción abortaría
 el golden set. Pero hay dos clases de fallo. Uno es que el modelo devuelva una
@@ -521,15 +502,16 @@ la tabla distingue «falló el sistema» de «falló el proveedor».
 
 ---
 
-## Pendiente de decidir
+## Lo que quedó sin hacer
 
 - **Troceado propio.** El corpus viene troceado a ~500 tokens con 80 de solape.
-  Re-trocearlo es legítimo y puede subir el recall, pero invalida el índice
-  entregado y obliga a reembeber. Decidir en la fase 3, con números.
-- **`max_tokens_seccion` por defecto.** Hoy es `None` —sección entera, como el
-  baseline—. Ponerle un tope baja el coste medio por pregunta, que es columna
-  de la tabla, pero cambia el comportamiento respecto al baseline. Medir las dos
-  antes de elegir.
-- **Modelo para las preguntas ciegas.** `gemini-3.8-flash` es el del profesor y
-  el más barato. Comparar contra uno mejor en la fase 6 y decidir con la tabla
-  delante, no por intuición.
+  Re-trocearlo podría subir el recall, pero invalida el índice entregado y
+  obliga a reembeber. Con un recall@5 de 0,92 no compensaba.
+- **`max_tokens_seccion`.** Sigue en `None`, la sección entera, como el
+  baseline. El agente final casi nunca llama a `read_section`, así que un tope
+  apenas movería el coste.
+- **Otro modelo.** Todo se mide con `gemini-3.8-flash`, el del baseline, para
+  que la tabla compare sistemas y no modelos. Probar uno mejor queda fuera.
+- **Una tolerancia por unidad.** 1 USD es demasiado para magnitudes por acción
+  (ver el informe). No se cambió para no mover la vara de medir después de
+  congelar el baseline.

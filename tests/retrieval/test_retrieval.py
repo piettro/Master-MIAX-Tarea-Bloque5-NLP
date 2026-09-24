@@ -1,9 +1,8 @@
-"""Retrieval: el denso, y las cuatro mejoras de la fase 3 ya implementadas.
+"""Retrieval: el denso y las mejoras que se miden en la tabla de ablación.
 
-Estos tests nacieron como `xfail(strict=True)` (ADR-010): la suite quedaba verde
-pero la especificación seguía visible, y al implementar cada pieza el test pasaba
-a `XPASS` y fallaba, obligando a quitar la marca. La fase 3 (Alonso) está hecha,
-así que las marcas se han quitado y estos tests corren en verde de verdad.
+Estos tests nacieron como `xfail(strict=True)` (ADR-010): la especificación
+quedaba escrita antes que el código, y al implementar cada pieza el test pasaba
+a `XPASS` y obligaba a quitar la marca.
 """
 
 from __future__ import annotations
@@ -163,7 +162,7 @@ class TestLectorDeIndicePlano:
 
 
 # ---------------------------------------------------------------------------
-# FASE 3 — implementada: RRF, tokenizador de BM25, filtro previo y reescritura
+# Las mejoras: RRF, tokenizador de BM25, filtro previo y reescritura
 # ---------------------------------------------------------------------------
 
 

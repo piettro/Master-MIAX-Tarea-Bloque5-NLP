@@ -44,7 +44,7 @@ PLANTILLA = {
     "ancla_fin": None,
     "chunk_id_esperado": None,
     "herramienta_esperada": ["get_xbrl_fact"],
-    "autor": "piettro",
+    "autor": "equipo",
 }
 
 
@@ -209,14 +209,14 @@ class TestComposicion:
 
 
 class TestFusionDeParciales:
-    def test_fusiona_los_ficheros_de_los_tres_autores(self, tmp_path):
-        """Cada autor en su fichero: así no hay conflictos de merge en un JSONL."""
+    def test_fusiona_varios_ficheros(self, tmp_path):
+        """Una tanda por fichero: así no hay conflictos de merge en un JSONL."""
         parciales = tmp_path / "parciales"
         parciales.mkdir()
-        (parciales / "piettro.jsonl").write_text(
+        (parciales / "tanda_a.jsonl").write_text(
             json.dumps({**PLANTILLA, "id": "g-p-001"}) + "\n", encoding="utf-8"
         )
-        (parciales / "alonso.jsonl").write_text(
+        (parciales / "tanda_b.jsonl").write_text(
             json.dumps({**PLANTILLA, "id": "g-a-001"}) + "\n", encoding="utf-8"
         )
         destino = tmp_path / "golden_set.jsonl"
@@ -226,7 +226,7 @@ class TestFusionDeParciales:
     def test_un_id_repetido_entre_ficheros_lo_dice(self, tmp_path):
         parciales = tmp_path / "parciales"
         parciales.mkdir()
-        for nombre in ("piettro.jsonl", "alonso.jsonl"):
+        for nombre in ("tanda_a.jsonl", "tanda_b.jsonl"):
             (parciales / nombre).write_text(
                 json.dumps(PLANTILLA) + "\n", encoding="utf-8"
             )

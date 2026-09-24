@@ -1,4 +1,4 @@
-"""Fusión de varios recuperadores por RRF. FASE 3 — Alonso.
+"""Fusión de varios recuperadores por RRF.
 
 **Reciprocal Rank Fusion, no suma de puntuaciones.** La similitud coseno del
 denso vive en [-1, 1] y la puntuación BM25 no tiene cota superior ni escala

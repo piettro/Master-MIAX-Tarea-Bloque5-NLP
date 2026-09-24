@@ -32,7 +32,7 @@ test:            ## pytest
 cobertura:       ## pytest con informe de cobertura
 	@$(TAREAS) cobertura
 
-baseline:        ## Ejecuta el baseline del profesor y lo CONGELA (HITO 1)
+baseline:        ## Ejecuta el baseline del profesor y lo CONGELA
 	@$(TAREAS) baseline
 
 final:           ## Ejecuta el sistema final sobre el golden set

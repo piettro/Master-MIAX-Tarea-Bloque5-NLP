@@ -1,4 +1,4 @@
-"""Captura de la trayectoria, los tokens, el coste y la latencia. FASE 4.
+"""Captura de la trayectoria, los tokens, el coste y la latencia.
 
 La traza es la entrada del evaluador de trayectoria y de toda la tabla del
 informe. Sin ella no se puede distinguir una respuesta correcta de una respuesta

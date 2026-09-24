@@ -58,6 +58,20 @@ decidir cuál llamar: son parte funcional del sistema, no documentación (C2).
 leyéndola de la prosa cuenta como fallo aunque el número salga bien, porque ese
 camino no generaliza. Hay un evaluador escrito para detectarlo.
 
+## Contratos
+
+El código cita estos compromisos por su número. Salen del enunciado y no se
+rompen sin romper la evaluación del día 24.
+
+| | Qué fija |
+| --- | --- |
+| C1 | Nombres y parámetros de las cuatro herramientas |
+| C2 | Sus docstrings: es lo que lee el modelo para elegir |
+| C3 | El esquema `RespuestaFinanciera`; se pueden añadir campos con valor por defecto, no quitar |
+| C4 | El esquema de una pregunta del golden set |
+| C5 | `responder()` y `evaluar()`, ejecutables sobre un clon limpio sin tocar nada |
+| C6 | Ninguna clave de API en el repositorio |
+
 ## Órdenes
 
 ```bash

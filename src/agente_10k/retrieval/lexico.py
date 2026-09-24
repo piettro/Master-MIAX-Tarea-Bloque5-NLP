@@ -1,4 +1,4 @@
-"""BM25 sobre los mismos 1.749 fragmentos. FASE 3 — Alonso.
+"""BM25 sobre los mismos 1.749 fragmentos.
 
 Por qué hace falta además del denso: la búsqueda densa falla justo donde más
 duele en finanzas. Un ticker, un nombre propio o una cifra concreta no tienen

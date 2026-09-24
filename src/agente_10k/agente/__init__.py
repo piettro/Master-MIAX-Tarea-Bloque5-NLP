@@ -1,4 +1,4 @@
-"""El agente: proveedor, prompt, middleware, constructor y trazas. FASE 4."""
+"""El agente: proveedor, prompt, middleware, constructor y trazas."""
 
 from __future__ import annotations
 

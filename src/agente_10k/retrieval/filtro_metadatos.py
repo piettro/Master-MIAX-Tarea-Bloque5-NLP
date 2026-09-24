@@ -1,4 +1,4 @@
-"""Decorador que filtra por metadatos ANTES de buscar. FASE 3 — Alonso.
+"""Decorador que filtra por metadatos ANTES de buscar.
 
 P2: Decorator. Recibe un `Recuperador` y devuelve un `Recuperador`, de modo que
 la mejora se activa y se desactiva por configuración y la fila «+ filtro de

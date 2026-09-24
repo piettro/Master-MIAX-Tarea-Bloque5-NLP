@@ -4,23 +4,20 @@ El golden set propio: **20 preguntas**, de las cuales **≥6 comparativas**,
 **≥2 de hueco real**, **≥1 trampa de `fiscal_year`** y **≥1 trampa de concepto
 XBRL**. CONTRATO C4.
 
-## Cómo se escribe sin pisarse
+## Escribir en paralelo
 
-Las preguntas se escriben en `parciales/`, un fichero por tanda, y de ahí se
-fusionan. Las veinte que hay salieron de `parciales/preguntas.jsonl`.
-
-La fusión:
+Un JSONL es un fichero donde git no sabe resolver conflictos. Si se escriben
+preguntas en varias tandas a la vez, cada una va en su fichero y se fusionan con
+un script, no con un merge:
 
 ```python
 from pathlib import Path
 from golden.validador import fusionar_parciales
 
-fusionar_parciales(Path("golden/parciales"), Path("golden/golden_set.jsonl"))
+fusionar_parciales(Path("tandas/"), Path("golden/golden_set.jsonl"))
 ```
 
-Un JSONL es un fichero donde git no sabe resolver conflictos, y veinte líneas
-escritas por tres personas a la vez son veinte conflictos. Por eso la fusión es
-un script y no un merge.
+La fusión rechaza un `id` repetido entre ficheros.
 
 ## Antes de dar una pregunta por buena
 

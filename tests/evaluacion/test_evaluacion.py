@@ -1,4 +1,4 @@
-"""Evaluación. Lo verde son recall@k y la lectura tolerante; lo `xfail`, la fase 5.
+"""Evaluación: recall@k, los tres evaluadores, las métricas y las tablas.
 
 El caso que más importa de este fichero es `TestLecturaTolerante`: es el fallo
 más probable de toda la práctica. El día 24 llegan diez preguntas que pueden
@@ -14,8 +14,6 @@ import pytest
 from agente_10k.dominio.modelos import Fragmento, Pregunta
 from agente_10k.evaluacion.ejecutor import leer_preguntas
 from agente_10k.evaluacion.metricas import acierta_en_k, recall_at_k
-
-FASE_5 = pytest.mark.xfail(strict=True, reason="Fase 5 · Raúl")
 
 ANCLA = "Our AI systems offer users powerful tools and capabilities."
 
@@ -121,7 +119,7 @@ class TestLecturaTolerante:
 
 
 # ---------------------------------------------------------------------------
-# FASE 5 — la especificación, en rojo
+# Los tres evaluadores y el ejecutor
 # ---------------------------------------------------------------------------
 
 
@@ -619,7 +617,7 @@ class TestGenerarTodo:
         assert {"resultados_baseline.md", "resultados_final.md"} <= escritos
 
     def test_con_solo_el_baseline_no_inventa_la_comparacion(self, tmp_path):
-        """Es el estado real hasta que la fase 4 aterriza."""
+        """Antes de ejecutar el final, solo existe el baseline."""
         from agente_10k.evaluacion.informe import generar_todo
 
         resultados = tmp_path / "resultados"

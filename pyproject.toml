@@ -103,7 +103,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# El baseline del profesor se preserva TAL CUAL (CONTRATO: HITO 1).
+# El baseline del profesor se preserva TAL CUAL.
 "src/agente_10k/baseline/*" = ["ALL"]
 "src/agente_10k/cli.py" = ["T20"]
 "scripts/*" = ["T20"]

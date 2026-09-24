@@ -239,7 +239,7 @@ def evaluar(
         avisos.append(aviso_recall)
 
     configuracion: dict[str, object] = {
-        **getattr(sistema, "descripcion", {"sistema": "agente final (fase 4)"}),
+        **getattr(sistema, "descripcion", {"sistema": "agente final"}),
         "retrieval": cfg.resumen_retrieval(),
         "max_llamadas_herramienta": cfg.max_llamadas_herramienta,
         "tolerancia_cifra": TOLERANCIA.describir(),

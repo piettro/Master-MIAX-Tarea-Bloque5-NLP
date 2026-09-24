@@ -1,8 +1,7 @@
-"""El system prompt, versionado. FASE 4 — Piettro.
+"""El system prompt, versionado.
 
-El prompt está escrito y es funcional: sin él no hay nada que probar. Lo que
-queda para la fase 4 es la comprobación de que cada regla se puede rastrear a
-una pregunta del golden set, que es lo que impide que crezca por acumulación.
+Cada regla del prompt se puede rastrear a una pregunta del golden set
+(`TRAZABILIDAD`), que es lo que impide que crezca por acumulación de parches.
 
 La versión (`VERSION_PROMPT`) va a la traza de cada invocación. Sin eso, dos
 ejecuciones del golden set con prompts distintos son indistinguibles en

@@ -134,7 +134,7 @@ def validar_golden(ruta_jsonl: Path) -> None:
 def baseline(
     ruta_jsonl: Path = RUTA_GOLDEN_POR_DEFECTO,
 ) -> None:
-    """Ejecuta el baseline del profesor y lo CONGELA. HITO 1, irreversible.
+    """Ejecuta el baseline del profesor y lo CONGELA. Irreversible.
 
     El sistema es `miax_s2.baseline()`, el agente del día 10 que reparte el
     profesor, con el mismo modelo que el sistema final. El recall@k se mide con
@@ -175,15 +175,15 @@ def baseline(
 def ablacion(
     ruta_golden: Path = RUTA_GOLDEN_POR_DEFECTO,
 ) -> None:
-    """Regenera la tabla de ablación del retrieval. FASE 3.
+    """Regenera la tabla de ablación del retrieval.
 
     Recorre `CONFIGURACIONES_ABLACION`, mide `recall@k` contra el ancla de texto
     del golden set y escribe `resultados/retrieval/ablacion.{md,csv}` más el
     detalle por pregunta. Necesita el corpus montado y un golden set con anclas;
     si falta algo, lo dice en vez de escribir una tabla vacía.
 
-    La fila de la reescritura necesita un proveedor de LLM (fase 4): si no hay
-    clave, esa fila sale marcada como «pendiente» y las demás se miden igual.
+    La fila de la reescritura necesita la clave del modelo: si no la hay, esa
+    fila sale marcada como «pendiente» y las demás se miden igual.
     """
     from agente_10k.corpus import cargar_corpus
     from agente_10k.dominio.errores import CorpusNoEncontrado
@@ -204,7 +204,7 @@ def ablacion(
 
     if not ruta_golden.is_file():
         print(f"No se puede medir: no existe el golden set en {ruta_golden}.")
-        print("Escribe golden/golden_set.jsonl (fase 2) antes de medir el recall.")
+        print("Escribe golden/golden_set.jsonl antes de medir el recall.")
         raise typer.Exit(1)
 
     preguntas = leer_preguntas(ruta_golden)
@@ -242,7 +242,7 @@ def ablacion(
 def informe(
     pdf: bool = typer.Option(False, help="Montar además el informe en PDF"),
 ) -> None:
-    """Regenera todas las tablas del informe desde resultados/. FASE 5."""
+    """Regenera todas las tablas del informe desde resultados/."""
     from agente_10k.evaluacion.informe import generar_todo
 
     cfg = settings()
@@ -273,7 +273,7 @@ def comparar(
     baseline_etiqueta: str = "baseline",
     final_etiqueta: str = "final",
 ) -> None:
-    """La tabla baseline contra final, con el mejor valor remarcado. FASE 5."""
+    """La tabla baseline contra final, con el mejor valor remarcado."""
     from agente_10k.evaluacion.informe import cargar_informe, tabla_comparada
 
     dir_resultados = settings().dir_resultados

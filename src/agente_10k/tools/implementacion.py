@@ -6,8 +6,8 @@ corpus real, sin red y sin clave de API. Las funciones del CONTRATO C1 están en
 `contratos.py` y delegan aquí.
 
 La clase no construye nada: recibe los repositorios y el recuperador ya hechos.
-Eso es lo que permite que la fase 3 enchufe su recuperador híbrido sin tocar una
-línea de este fichero.
+Eso es lo que permite cambiar de recuperador —denso, híbrido, con o sin
+reordenación— sin tocar una línea de este fichero.
 """
 
 from __future__ import annotations
@@ -147,8 +147,8 @@ def herramientas_por_defecto(
     """El cinturón montado desde la configuración del proceso.
 
     Si el recuperador no se puede construir —falta el índice, falta el modelo
-    de embeddings, la configuración pide una mejora de la fase 3 que todavía es
-    un stub—, las otras tres herramientas siguen funcionando y `search_filings`
+    de embeddings, falta la clave para la reescritura—, las otras tres
+    herramientas siguen funcionando y `search_filings`
     devuelve un texto que dice POR QUÉ. Degradar sí; degradar en silencio no:
     un `search_filings` que no busca y no dice por qué se descubre el día 24.
     """
