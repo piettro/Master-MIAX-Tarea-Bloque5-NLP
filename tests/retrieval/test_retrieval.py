@@ -1,6 +1,6 @@
 """Retrieval: el denso y las mejoras que se miden en la tabla de ablación.
 
-Estos tests nacieron como `xfail(strict=True)` (ADR-010): la especificación
+Estos tests nacieron como `xfail(strict=True)`: la especificación
 quedaba escrita antes que el código, y al implementar cada pieza el test pasaba
 a `XPASS` y obligaba a quitar la marca.
 """

@@ -8,8 +8,7 @@ arreglar.
 Es una superconjunto del validador del profesor (celda 32 del notebook de la
 sesión 1) y conserva sus tres familias: `extractiva`, `numerica`, `comparativa`.
 Las preguntas de hueco real NO son una cuarta familia —el validador oficial las
-rechazaría— sino numéricas o comparativas con `cifra_esperada` nula. Ver
-docs/decisiones.md, ADR-007.
+rechazaría— sino numéricas o comparativas con `cifra_esperada` nula.
 
 La regla que más preguntas invalida, y la que más tiempo ahorra encontrar aquí y
 no el día 23: **el `ancla_texto` tiene que aparecer LITERALMENTE en el corpus.**

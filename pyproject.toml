@@ -18,7 +18,7 @@ authors = [
 # Versiones FIJADAS, no rangos. El notebook de la sesion 1 las verifico contra
 # la documentacion oficial el 2 de septiembre de 2026; LangChain publica cada
 # pocos dias y una API que se mueve debajo del codigo lo rompe sin tocar una
-# linea. Ver docs/decisiones.md, ADR-002.
+# linea.
 dependencies = [
     "langchain==1.3.18",
     "langchain-core==1.6.1",
@@ -51,7 +51,6 @@ dev = [
 ]
 # Proveedores alternativos del CONTRATO C5/P5. No se instalan por defecto:
 # el evaluador externo solo necesita el proveedor que este en LLM_PROVIDER.
-informe = ["markdown-it-py>=3.0"]
 anthropic = ["langchain-anthropic>=1.0"]
 google = ["langchain-google-genai>=2.0"]
 openai = ["langchain-openai>=1.0"]
@@ -94,7 +93,7 @@ ignore = [
     "PLR0913",  # las tools tienen los parametros que fija el CONTRATO C1
     # Los imports perezosos son una DECISION de diseno, no un descuido:
     # `import agente_10k` tiene que ser instantaneo y no debe fallar porque
-    # falte LangChain, faiss o torch (CONTRATO C5, y ADR-005). Van dentro de
+    # falte LangChain, faiss o torch (CONTRATO C5). Van dentro de
     # las funciones a proposito y hay un test que lo comprueba.
     "PLC0415",
     # El codigo esta escrito en castellano, con comillas tipograficas y
@@ -108,7 +107,6 @@ ignore = [
 "src/agente_10k/cli.py" = ["T20"]
 "scripts/*" = ["T20"]
 "golden/validador.py" = ["T20"]
-"golden/asistente_preguntas.py" = ["T20"]
 # En los tests, el nombre del metodo ES la frase que documenta el caso:
 # `test_dice_que_se_use_SIEMPRE_...` se lee en la salida de pytest.
 "tests/*" = ["D", "ANN", "PLR2004", "T20", "N802", "N806"]
@@ -131,7 +129,7 @@ known-first-party = ["agente_10k"]
 # 3.12 y no 3.11 por una limitacion de las anotaciones de numpy, que usan la
 # sintaxis `type X = ...` y no se pueden analizar declarando un objetivo
 # anterior. El CODIGO sigue siendo valido en 3.11 (`requires-python`), y ruff
-# lo comprueba con `target-version = "py311"`. Ver docs/decisiones.md, ADR-003.
+# lo comprueba con `target-version = "py311"`.
 python_version = "3.12"
 strict = true
 files = ["src/agente_10k"]

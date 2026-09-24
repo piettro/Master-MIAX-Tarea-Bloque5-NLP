@@ -41,16 +41,13 @@ final:           ## Ejecuta el sistema final sobre el golden set
 informe:         ## Regenera todas las tablas del informe desde resultados/
 	@$(TAREAS) informe
 
-pdf:             ## Monta docs/informe/informe.pdf desde la plantilla
-	@$(TAREAS) pdf
-
 ablacion:        ## Regenera la tabla de ablación del retrieval
 	@$(TAREAS) ablacion
 
 validar-golden:  ## Valida golden/golden_set.jsonl
 	@$(TAREAS) validar-golden
 
-reconstruir-secciones: ## Deriva secciones.jsonl desde los chunks (ADR-004)
+reconstruir-secciones: ## Deriva secciones.jsonl desde los chunks
 	@$(TAREAS) reconstruir-secciones
 
 limpiar:         ## Borra cachés de herramientas y de embeddings

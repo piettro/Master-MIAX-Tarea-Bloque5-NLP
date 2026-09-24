@@ -58,16 +58,16 @@ data/corpus/indice/*
 data/*.zip
 
 # Secciones reconstruidas desde los chunks: son un derivado, se regeneran con
-# `make reconstruir-secciones` (ADR-004).
+# `make reconstruir-secciones`.
 data/derivado/
 
 # ---------------------------------------------------------------------------
-# Material de clase. Se queda en local y NO se publica: las transcripciones y
-# los notebooks del profesor no son nuestros y no pintan nada en el entregable
-# (ADR-020). El enunciado sí viaja, en docs/enunciado.md, porque el repo tiene
-# que poder leerse sin el aula virtual delante.
+# Material de clase y documentos de trabajo. Se quedan en local y NO se
+# publican: las transcripciones y los notebooks del profesor no son nuestros, y
+# el informe en PDF se entrega por el aula virtual, no en el repositorio.
 # ---------------------------------------------------------------------------
 materials/
+docs/
 class_transcription/
 notebooks/
 

@@ -2,7 +2,7 @@
 
 El proveedor se elige por variable de entorno y LangChain abstrae el resto:
 `init_chat_model("openrouter:google/gemini-3.8-flash")` y
-`init_chat_model("anthropic:claude-opus-5")` devuelven el mismo objeto. Cambiar
+`init_chat_model("openai:gpt-4.1-mini")` devuelven el mismo objeto. Cambiar
 de proveedor es cambiar una cadena, no tocar código.
 
 **El fallback es una VARIABLE DE ESTADO, no un try/except por llamada.** Cuando

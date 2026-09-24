@@ -9,7 +9,7 @@ midiendo lo mismo con distinta configuración, sino dos programas distintos—.
 
 La métrica es `recall@k` contra el ANCLA DE TEXTO del golden set, no contra el
 `chunk_id`: un fragmento cuenta como acierto si CONTIENE el ancla literal. Se
-mide así a propósito (ver `metricas.recall_at_k` y ADR-004): el `chunk_id`
+mide así a propósito (ver `metricas.recall_at_k`): el `chunk_id`
 cambia en cuanto se re-trocea el corpus, y medir por él penalizaría justo al
 grupo que mejore el troceado.
 
@@ -21,7 +21,7 @@ Dos decisiones de medición que conviene tener delante al leer la tabla:
   parecería nula. Para que «filtrar antes» sea una mejora medible y no algo que
   el sistema ya hacía, la fila base busca sin metadatos —como haría un agente
   que no sabe de qué emisor es la pregunta— y solo las filas con
-  `filtro_metadatos=True` los aplican. Es exactamente el punto de ADR-009.
+  `filtro_metadatos=True` los aplican.
 * **El coste de la reescritura se lee de su contador, no se estima.** Las filas
   sin reescritura no llaman al modelo y su coste es 0: el retrieval es local. La
   fila de la reescritura añade una llamada por pregunta, y ese coste aparece en

@@ -11,7 +11,7 @@ cubren la sección entera mediante `inicio_car`/`fin_car`, pero en 1.029 de las
 1.701 fronteras se pierden entre 2 y 4 caracteres —el separador que consumió el
 troceador—, así que el texto reconstruido NO es literal en esas costuras. Sirve
 para que `read_section` funcione y para leer; no sirve para verificar un ancla
-que cruce una frontera. Ver docs/decisiones.md, ADR-004.
+que cruce una frontera.
 """
 
 from __future__ import annotations

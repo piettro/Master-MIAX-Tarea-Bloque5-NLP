@@ -150,8 +150,8 @@ def baseline(
     if guardian.RUTA_SELLO.is_file():
         print(
             "resultados/baseline/ ya está CONGELADO. Si de verdad hay que "
-            "regenerarlo, borra SELLO.json a mano y deja constancia en "
-            "docs/decisiones.md de por qué."
+            "regenerarlo, borra SELLO.json a mano y deja constancia en el "
+            "commit de por qué."
         )
         raise typer.Exit(1)
 
@@ -239,32 +239,12 @@ def ablacion(
 
 
 @app.command()
-def informe(
-    pdf: bool = typer.Option(False, help="Montar además el informe en PDF"),
-) -> None:
-    """Regenera todas las tablas del informe desde resultados/."""
+def informe() -> None:
+    """Regenera las tablas del informe en resultados/tablas/."""
     from agente_10k.evaluacion.informe import generar_todo
 
     cfg = settings()
-    destino = RAIZ_REPO / "docs" / "informe"
-    escritos = generar_todo(cfg.dir_resultados, destino)
-    if pdf:
-        from agente_10k.evaluacion.documento import generar
-
-        plantilla = destino / "plantilla.md"
-        if not plantilla.is_file():
-            print(f"No hay plantilla en {plantilla}.")
-            raise typer.Exit(1)
-        montados = generar(
-            plantilla,
-            RAIZ_REPO,
-            destino,
-            "Un agente investigador sobre informes 10-K",
-        )
-        escritos += montados
-        if not any(r.suffix == ".pdf" for r in montados):
-            print("Sin Edge ni Chrome: queda el HTML, imprímelo desde el navegador.")
-    for ruta in escritos:
+    for ruta in generar_todo(cfg.dir_resultados, cfg.dir_resultados / "tablas"):
         print(f"escrito {ruta}")
 
 
@@ -292,7 +272,7 @@ def comparar(
 def reconstruir_secciones() -> None:
     """Deriva secciones.jsonl desde los fragmentos cuando el original no está.
 
-    Lo que produce NO es literal en las fronteras de troceado. Ver ADR-004.
+    Lo que produce NO es literal en las fronteras de troceado.
     """
     from agente_10k.corpus import cargar_corpus
 

@@ -127,7 +127,7 @@ class TestRepositorioSecciones:
 
 
 class TestReconstruccionDeSecciones:
-    """ADR-004: derivar secciones de los fragmentos funciona, pero no es literal."""
+    """Derivar secciones de los fragmentos funciona, pero no es literal."""
 
     def test_reconstruye_una_seccion_por_grupo(self, repo_fragmentos):
         repo = RepositorioSeccionesMemoria.desde_fragmentos(repo_fragmentos.todos())

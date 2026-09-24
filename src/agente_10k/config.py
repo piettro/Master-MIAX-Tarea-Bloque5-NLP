@@ -78,14 +78,14 @@ class Settings(BaseSettings):
         default=True,
         description=(
             "Si `secciones.jsonl` no está, derivar las secciones de los "
-            "fragmentos. NO es literal en las fronteras de troceado: ver "
-            "ADR-004. Ponlo a false para que falte el fichero sea un error"
+            "fragmentos. NO es literal en las fronteras de troceado. Ponlo "
+            "a false para que falte el fichero sea un error"
         ),
     )
 
     # --- retrieval (F3) ----------------------------------------------------
     # Los valores por defecto son los del SISTEMA FINAL, la fila que ganó la
-    # ablación (ADR-021): `responder()` sobre un clon limpio tiene que ejecutar
+    # ablación: `responder()` sobre un clon limpio tiene que ejecutar
     # el sistema que se defiende sin exportar nada. El baseline y las filas de
     # la ablación parten de `retrieval.fabrica.SIN_MEJORAS`, no de aquí.
     recuperador: TipoRecuperador = "hibrido"
@@ -94,13 +94,13 @@ class Settings(BaseSettings):
         description=(
             "Aplicar los filtros ANTES de buscar. El profesor filtra después, "
             "sobre el orden que devuelve el índice; hacerlo antes es la primera "
-            "fila de la tabla de ablación (ADR-009)"
+            "fila de la tabla de ablación"
         ),
     )
     reescritura_consulta: bool = True
     reordenacion: bool = Field(
         default=True,
-        description="Reordenar los candidatos con un cross-encoder (ADR-016)",
+        description="Reordenar los candidatos con un cross-encoder",
     )
     fusion_reordenacion: bool = Field(
         default=True,

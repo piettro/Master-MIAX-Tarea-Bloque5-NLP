@@ -347,6 +347,7 @@ def generar_todo(dir_resultados: Path, destino: Path) -> list[Path]:
     informes = {
         ruta.parent.name: cargar_informe(ruta)
         for ruta in sorted(dir_resultados.glob("*/informe.json"))
+        if ruta.parent != destino
     }
     destino.mkdir(parents=True, exist_ok=True)
     escritos: list[Path] = []

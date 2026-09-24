@@ -3,9 +3,11 @@
 Responde preguntas sobre los 10-K de NVDA, MSFT, AAPL, GOOGL, META y AMZN
 (FY2024 y FY2025, items 1A, 7, 7A y 8) **citando de dónde sale cada dato**.
 
-Práctica de *LLMs aplicados a Finanzas* · MIAX, Instituto BME · Piettro, Alonso y Raúl.
+Práctica de *LLMs aplicados a Finanzas* · MIAX, Instituto BME.
 
-## Quickstart
+**Autores:** Alonso, Piettro y Raúl.
+
+## Instalación
 
 ```bash
 git clone <este-repo> agente-10k && cd agente-10k
@@ -13,18 +15,40 @@ python -m venv .venv && .venv/bin/activate      # Windows: .venv\Scripts\activat
 pip install -e .                                 # o: make setup
 cp .env.example .env                             # y pon tu OPENROUTER_API_KEY
 # descomprime corpus_miax_2026.zip e indice_faiss.zip dentro de data/corpus/
-python -m agente_10k.cli diagnostico             # dice qué hay y qué falta
-python -c "from agente_10k import responder; print(responder('¿Cuál fue el revenue de NVIDIA en el ejercicio 2024?'))"
-python -c "from agente_10k import evaluar; print(evaluar('golden/golden_set.jsonl'))"
+agente-10k diagnostico                           # dice qué hay y qué falta
 ```
 
-Las dos últimas líneas son el CONTRATO C5 y son lo que se ejecuta el día 24
-sobre diez preguntas ciegas, sin editar nada.
+## Uso
+
+Desde Python, las dos funciones que pide el enunciado (CONTRATO C5):
+
+```python
+from agente_10k import responder, evaluar
+
+respuesta = responder("¿Cuál fue el revenue de NVIDIA en el ejercicio 2024?")
+print(respuesta.cifra, respuesta.unidad, respuesta.fuente, respuesta.cita)
+
+informe = evaluar("ciegas.jsonl")   # un JSONL de preguntas, una por línea
+print(informe)                      # aciertos, coste y latencia
+```
+
+Desde la terminal, lo mismo:
+
+```bash
+agente-10k responder "¿Cuál fue el revenue de NVIDIA en el ejercicio 2024?"
+agente-10k evaluar ciegas.jsonl --etiqueta ciegas
+```
+
+`evaluar` acepta preguntas con solo `id` y `pregunta`: los evaluadores que no
+pueden aplicarse devuelven «no aplica» en vez de fallar. El detalle y el
+resumen quedan en `resultados/<etiqueta>/`, y `agente-10k informe` regenera las
+tablas en `resultados/tablas/`, incluida la comparación con las ciegas.
+
+Sin `make` —Windows— `agente-10k` equivale a `python -m agente_10k.cli`.
 
 ## Corpus
 
-No se versiona: lo reparte el profesor en dos ZIP. Descomprimidos, la estructura
-que espera el código es la del notebook de la sesión 1:
+No se versiona: lo reparte el profesor en dos ZIP. Descomprimidos:
 
 ```
 data/corpus/
@@ -37,9 +61,8 @@ data/corpus/
     └── MANIFEST.md        versionado: documenta el prefijo de la consulta
 ```
 
-`agente-10k diagnostico` dice qué falta. Si falta `secciones.jsonl`, el sistema
-deriva las secciones de los fragmentos y **lo dice**: no son literales en las
-fronteras de troceado (ver `docs/decisiones.md`, ADR-004).
+Si falta `secciones.jsonl`, el sistema deriva las secciones de los fragmentos y
+**lo dice**: no son literales en las fronteras de troceado.
 
 ## Las cuatro herramientas
 
@@ -50,18 +73,67 @@ fronteras de troceado (ver `docs/decisiones.md`, ADR-004).
 | `search_filings(query, ticker, fiscal_year, item, k)` | media | difusa | Riesgos, estrategia, MD&A |
 | `read_section(ticker, fiscal_year, item)` | **alta** | exacta | Último recurso: decenas de miles de tokens |
 
-Los nombres y los parámetros son contrato (C1) y no se cambian. Los docstrings
-de `src/agente_10k/tools/contratos.py` son lo único que ve el modelo para
-decidir cuál llamar: son parte funcional del sistema, no documentación (C2).
+Los docstrings de `src/agente_10k/tools/contratos.py` son lo único que ve el
+modelo para decidir cuál llamar: son parte funcional del sistema. Acertar una
+cifra leyéndola de la prosa cuenta como fallo aunque el número salga bien, y hay
+un evaluador escrito para detectarlo.
 
-**La asimetría de esa tabla es el eje de la práctica.** Acertar una cifra
-leyéndola de la prosa cuenta como fallo aunque el número salga bien, porque ese
-camino no generaliza. Hay un evaluador escrito para detectarlo.
+## Cómo funciona
+
+```
+pregunta ─► agente (create_agent, ReAct) ─► herramientas ─► RespuestaFinanciera
+              │
+              └─ middleware: reintento · modelo de reserva · límite de llamadas
+                             · guardarraíl XBRL · petición de salida estructurada
+```
+
+- **Retrieval** de `search_filings`: híbrido denso + BM25, filtro de metadatos
+  antes de buscar, consulta reescrita al inglés por el modelo y reordenación
+  con cross-encoder fusionada por RRF. Es la configuración por defecto.
+- **Guardarraíl XBRL**: si la cifra de la respuesta no cuadra con el hecho XBRL
+  (0,5 % o 1 USD), le devuelve el desajuste al modelo. Nunca corrige la cifra.
+- **Evaluación**: tres evaluadores —cita, cifra y trayectoria—. Acierto es
+  respuesta correcta **y** camino correcto. Cada proporción lleva su intervalo
+  de Wilson y la comparación entre sistemas, un contraste de McNemar exacto.
+
+## Golden set
+
+`golden/golden_set.jsonl`: 20 preguntas propias, 8 numéricas (3 de ellas huecos:
+el dato no está en el corpus), 6 comparativas y 6 extractivas. Las extractivas
+se anclan a una frase literal del informe, no a un `chunk_id`.
+
+```bash
+agente-10k validar-golden golden/golden_set.jsonl
+```
+
+## Resultados
+
+Todo lo genera el repositorio; nada se escribe a mano.
+
+```
+resultados/
+├── baseline/                      el agente del profesor, CONGELADO (SELLO.json)
+├── final/                         nuestro sistema
+├── final-sin-mejoras-retrieval/   el final con el retrieval del baseline
+├── retrieval/                     la tabla de ablación y su contraste
+├── ciegas/                        las 10 preguntas del día 24
+└── tablas/                        baseline contra final, contraste y resúmenes
+```
+
+El baseline se ejecutó y congeló antes de mejorar nada: `SELLO.json` guarda el
+SHA-256 de cada fichero y un test comprueba que no cambian.
+
+## Órdenes
+
+```bash
+make setup     lint     test     cobertura
+make baseline  final    informe  ablacion
+make validar-golden
+```
 
 ## Contratos
 
-El código cita estos compromisos por su número. Salen del enunciado y no se
-rompen sin romper la evaluación del día 24.
+El código cita estos compromisos por su número. Salen del enunciado.
 
 | | Qué fija |
 | --- | --- |
@@ -72,42 +144,19 @@ rompen sin romper la evaluación del día 24.
 | C5 | `responder()` y `evaluar()`, ejecutables sobre un clon limpio sin tocar nada |
 | C6 | Ninguna clave de API en el repositorio |
 
-## Órdenes
-
-```bash
-make setup     lint     test     cobertura
-make baseline  final    informe  pdf       ablacion
-make validar-golden
-```
-
-`make pdf` monta `docs/informe/informe.pdf` desde `docs/informe/plantilla.md`:
-la prosa es la plantilla y las tablas se incluyen desde `resultados/`. Lo que
-todavía no existe sale como PENDIENTE y el PDF se genera igual.
-
-Sin `make` —Windows— lo mismo con `python scripts/tareas.py <objetivo>`.
-
 ## Estructura
 
 ```
 src/agente_10k/
 ├── dominio/      modelos, protocolos, errores, tolerancia — no sabe de LangChain
-├── corpus/       los tres repositorios (P3)
-├── retrieval/    Strategy (P1) + Decorator (P2)
-├── tools/        las cuatro firmas (C1) y sus docstrings (C2)
-├── agente/       proveedor (P5), prompt, middleware (P4), trazas
-├── evaluacion/   los tres evaluadores, métricas, ejecutor, tablas
-└── baseline/     la implementación del profesor, intacta
+├── corpus/       los tres repositorios (secciones, fragmentos, XBRL)
+├── retrieval/    recuperadores (Strategy) y mejoras (Decorator)
+├── tools/        las cuatro herramientas y sus docstrings
+├── agente/       proveedor, prompt, middleware y trazas
+├── evaluacion/   los tres evaluadores, métricas, estadística, ejecutor y tablas
+├── baseline/     la implementación del profesor, intacta
+└── cli.py        la orden `agente-10k`
 golden/           el golden set y su validador
-resultados/       baseline congelado, final, ciegas — regenerables
-docs/decisiones.md  los ADR: por qué cada cosa es como es
+resultados/       baseline congelado, final, ablación y tablas
+tests/            la suite; los tests contra el modelo real se saltan sin clave
 ```
-
-## Estado
-
-Completo: dominio, corpus, herramientas, retrieval con su tabla de ablación,
-el agente con su middleware y el guardarraíl XBRL, golden set de 20 preguntas,
-evaluación y el informe en PDF. El baseline está congelado en
-`resultados/baseline/` con su `SELLO.json`, y el sistema final en
-`resultados/final/`.
-
-`docs/decisiones.md` dice por qué cada cosa es como es.

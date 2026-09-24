@@ -190,24 +190,17 @@ class TestBaselineCongelado:
 
 
 class TestOrganizacionDelRepo:
-    def test_el_enunciado_viaja_dentro_del_repo(self):
-        """El repo tiene que leerse sin el aula virtual delante."""
-        assert (RAIZ / "docs/enunciado.md").is_file()
-
     def test_el_material_de_clase_no_se_publica(self):
-        """ADR-020: las transcripciones y los notebooks del profesor no son
-        nuestros y se quedan en local."""
+        """Las transcripciones y los notebooks del profesor no son nuestros y
+        se quedan en local."""
         import subprocess
 
         versionados = subprocess.check_output(
-            ["git", "ls-files", "class_transcription", "notebooks"],
+            ["git", "ls-files", "class_transcription", "notebooks", "docs"],
             cwd=RAIZ,
             text=True,
         )
         assert versionados.strip() == ""
-
-    def test_hay_registro_de_decisiones(self):
-        assert (RAIZ / "docs/decisiones.md").is_file()
 
     def test_el_manifiesto_del_indice_esta_versionado(self):
         """Es lo que permite comprobar que las tres máquinas tienen el mismo
@@ -240,8 +233,9 @@ class TestOrganizacionDelRepo:
         )
         assert r.returncode == 0, "chunks_meta.parquet debería estar ignorado"
 
-    def test_resultados_tiene_su_protocolo_escrito(self):
-        assert (RAIZ / "resultados/README.md").is_file()
+    def test_el_baseline_esta_congelado(self):
+        """El protocolo del baseline vive en el README y en su sello."""
+        assert (RAIZ / "resultados/baseline/SELLO.json").is_file()
 
 
 @pytest.mark.parametrize(

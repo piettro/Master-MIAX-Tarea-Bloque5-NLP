@@ -51,8 +51,7 @@ class Corpus:
         if self.secciones_reconstruidas:
             problemas.append(
                 "secciones.jsonl no está: las secciones se derivaron de los "
-                "fragmentos y NO son literales en las fronteras de troceado "
-                "(ADR-004)."
+                "fragmentos y NO son literales en las fronteras de troceado."
             )
         if not self.xbrl.disponible():
             problemas.append(

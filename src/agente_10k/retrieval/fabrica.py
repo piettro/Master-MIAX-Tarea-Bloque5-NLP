@@ -141,7 +141,7 @@ SIN_MEJORAS: dict[str, object] = {
 """El retrieval de partida: el denso del profesor, sin nada encima.
 
 Cada fila de la ablación se mide sobre ESTO más sus overrides, no sobre los
-valores por defecto de `Settings`, que son los del sistema final (ADR-021). Si
+valores por defecto de `Settings`, que son los del sistema final. Si
 se midiera sobre los de por defecto, la fila «denso (base)» llevaría puestas
 todas las mejoras sin decirlo.
 """

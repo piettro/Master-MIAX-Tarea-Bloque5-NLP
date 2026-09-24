@@ -40,7 +40,7 @@ El validador del profesor (celda 32 del notebook de la sesión 1) solo admite
 estas tres. Las preguntas de HUECO REAL —Amazon sin `GrossProfit`— son
 `numerica` o `comparativa` con `cifra_esperada=None`, y se detectan con
 `Pregunta.es_hueco`, no con un cuarto valor de familia que haría que nuestro
-golden set no pasara el validador oficial. Ver docs/decisiones.md, ADR-007."""
+golden set no pasara el validador oficial."""
 
 Fuente = Literal["xbrl", "texto", "ambas", "ninguna"]
 """De dónde sale el dato. `ninguna` cuando no está en el corpus: decirlo es
@@ -199,7 +199,7 @@ class Seccion(BaseModel):
         description=(
             "Si el texto se derivó de los fragmentos en vez de leerse de "
             "secciones.jsonl. Una sección reconstruida NO es literal en las "
-            "fronteras de troceado: ver ADR-004"
+            "fronteras de troceado"
         ),
     )
 

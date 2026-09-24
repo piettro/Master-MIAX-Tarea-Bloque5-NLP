@@ -82,8 +82,7 @@ def main() -> int:
         print(f"  - {p}")
     print(
         "\nEs media tabla del informe. Si de verdad hay que volver a generarlo, "
-        "borra SELLO.json a mano y deja constancia en docs/decisiones.md de "
-        "por qué."
+        "borra SELLO.json a mano y deja constancia en el commit de por qué."
     )
     return 1
 

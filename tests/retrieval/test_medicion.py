@@ -1,7 +1,7 @@
 """El runner de la tabla de ablación.
 
 Se prueba la LÓGICA del runner —el recall contra el ancla, la decisión de pasar
-o no los filtros (ADR-015), el conteo del coste de la reescritura, las filas
+o no los filtros, el conteo del coste de la reescritura, las filas
 pendientes y el formato de la tabla— sin montar el índice FAISS ni el modelo de
 embeddings. La costura es el parámetro `recuperador` de `medir_configuracion`,
 que deja inyectar un espía en vez de fabricar uno real.
@@ -36,7 +36,7 @@ def _fragmento(chunk_id: str, texto: str, ticker: str = "MSFT") -> Fragmento:
 class _RecuperadorEspia:
     """Devuelve una lista fija y APUNTA con qué filtros lo llamaron.
 
-    Es lo que permite comprobar la decisión de ADR-015: la fila base tiene que
+    Es lo que permite comprobar la decisión clave: la fila base tiene que
     llamar sin filtros y la fila del filtro con ellos. Sin un espía, esa decisión
     —que es media tabla de ablación— no se podría verificar sin el corpus entero.
     """
@@ -145,7 +145,7 @@ class TestRecall:
 
 
 class TestDecisionDeFiltros:
-    """ADR-015: la fila base no filtra; la fila del filtro sí."""
+    """La fila base no filtra; la fila del filtro sí."""
 
     def test_la_fila_base_no_pasa_filtros(self):
         espia = _RecuperadorEspia([_fragmento("c1", "AI-related risks")])
